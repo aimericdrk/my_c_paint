@@ -175,6 +175,9 @@ typedef struct {
     sfTexture *file_icon_texture;
     sfSprite *file_icon_sprite;
     int icon_size;
+
+    // Cursor blinking
+    sfClock *cursor_blink_clock;
 } file_explorer_t;
 
 typedef struct {

@@ -134,7 +134,7 @@
         },
         "color_preview": {
             "x": 25,
-            "y": 565,
+            "y": 455,
             "width": 200,
             "height": 50,
             "outline_color": [
@@ -145,7 +145,8 @@
             ],
             "outline_thickness": 3,
             "label_text": "Color:",
-            "label_y": 535,
+            "label_x": 15,
+            "label_y": 425,
             "label_font_size": 16
         },
         "sliders": {
@@ -154,8 +155,10 @@
             "handle_width": 10,
             "handle_height": 30,
             "x": 25,
+            "slider_range": 190,
             "r_slider": {
-                "y": 640,
+                "y": 520,
+                "handle_y_offset": -5,
                 "color": [
                     255,
                     100,
@@ -163,11 +166,12 @@
                     255
                 ],
                 "label": "R",
-                "label_offset_x": 205,
-                "label_offset_y": 0
+                "label_x": 230,
+                "label_y": 520
             },
             "g_slider": {
-                "y": 690,
+                "y": 570,
+                "handle_y_offset": -5,
                 "color": [
                     100,
                     255,
@@ -175,11 +179,12 @@
                     255
                 ],
                 "label": "G",
-                "label_offset_x": 205,
-                "label_offset_y": 0
+                "label_x": 230,
+                "label_y": 570
             },
             "b_slider": {
-                "y": 740,
+                "y": 620,
+                "handle_y_offset": -5,
                 "color": [
                     100,
                     100,
@@ -187,11 +192,25 @@
                     255
                 ],
                 "label": "B",
-                "label_offset_x": 205,
-                "label_offset_y": 0
+                "label_x": 230,
+                "label_y": 620
+            },
+            "a_slider": {
+                "y": 670,
+                "handle_y_offset": -5,
+                "color": [
+                    100,
+                    100,
+                    255,
+                    255
+                ],
+                "label": "A",
+                "label_x": 230,
+                "label_y": 670
             },
             "size_slider": {
-                "y": 805,
+                "y": 760,
+                "handle_y_offset": -5,
                 "color": [
                     150,
                     150,
@@ -199,8 +218,10 @@
                     255
                 ],
                 "label": "Size:",
-                "label_y": 770,
-                "label_offset_x": 0,
+                "label_x": 15,
+                "label_y": 725,
+                "value_label_x": 70,
+                "value_label_y": 726,
                 "min": 1,
                 "max": 50
             },

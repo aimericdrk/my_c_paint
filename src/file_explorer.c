@@ -357,6 +357,9 @@ file_explorer_t *init_file_explorer(sfFont *font, ui_config_t *config) {
     sfText_setFillColor(explorer->cancel_label, sfWhite);
     sfText_setPosition(explorer->cancel_label, (sfVector2f){960, 720});
 
+    // Initialize cursor blink clock
+    explorer->cursor_blink_clock = sfClock_create();
+
     return explorer;
 }
 
@@ -378,6 +381,10 @@ void cleanup_file_explorer(file_explorer_t *explorer) {
     sfRectangleShape_destroy(explorer->cancel_button);
     sfText_destroy(explorer->cancel_label);
     sfText_destroy(explorer->title_text);
+
+    // Cleanup cursor blink clock
+    if (explorer->cursor_blink_clock)
+        sfClock_destroy(explorer->cursor_blink_clock);
 
     // Format dropdown cleanup
     sfRectangleShape_destroy(explorer->format_button);
@@ -535,19 +542,23 @@ void render_file_explorer(sfRenderWindow *window, file_explorer_t *explorer) {
         sfRenderWindow_drawText(window, explorer->filename_input_text, NULL);
 
         // Draw cursor - calculate position using findCharacterPos
-        sfText *temp_text = sfText_create(sfText_getFont(explorer->filename_input_text));
-        sfText_setString(temp_text, explorer->filename_input);
-        sfText_setCharacterSize(temp_text, 16);
-        sfText_setPosition(temp_text, (sfVector2f){370, 678});
+        // Blink every 0.5 seconds (show/hide)
+        sfTime elapsed = sfClock_getElapsedTime(explorer->cursor_blink_clock);
+        float seconds = sfTime_asSeconds(elapsed);
+        int show_cursor = ((int)(seconds * 2)) % 2 == 0; // Blink every 0.5s
 
-        sfVector2f cursor_pos = sfText_findCharacterPos(temp_text, explorer->input_cursor_pos);
-        sfText_destroy(temp_text);
+        if (show_cursor) {
+            sfText *temp_text = sfText_create(sfText_getFont(explorer->filename_input_text));
+            sfText_setString(temp_text, explorer->filename_input);
+            sfText_setCharacterSize(temp_text, 16);
+            sfText_setPosition(temp_text, (sfVector2f){370, 678});
 
-        sfText_setPosition(explorer->cursor_indicator, (sfVector2f){cursor_pos.x, 678});
-        sfRenderWindow_drawText(window, explorer->cursor_indicator, NULL);
+            sfVector2f cursor_pos = sfText_findCharacterPos(temp_text, explorer->input_cursor_pos);
+            sfText_destroy(temp_text);
 
-        // Draw format button
-        sfRenderWindow_drawRectangleShape(window, explorer->format_button, NULL);
+            sfText_setPosition(explorer->cursor_indicator, (sfVector2f){cursor_pos.x, 678});
+            sfRenderWindow_drawText(window, explorer->cursor_indicator, NULL);
+        }
         sfRenderWindow_drawText(window, explorer->format_button_label, NULL);
 
         // Draw format dropdown if open
@@ -583,18 +594,38 @@ void handle_file_explorer_text(file_explorer_t *explorer, uint32_t unicode) {
 
     if (unicode == 8) // Backspace
     {
-        if (explorer->input_cursor_pos > 0 && explorer->input_cursor_pos <= base_len) {
-            // Remove character before cursor in base_filename
-            memmove(&explorer->base_filename[explorer->input_cursor_pos - 1], &explorer->base_filename[explorer->input_cursor_pos], base_len - explorer->input_cursor_pos + 1);
-            explorer->input_cursor_pos--;
+        if (explorer->input_cursor_pos > 0) {
+            if (explorer->input_cursor_pos <= base_len) {
+                // Remove character before cursor in base_filename
+                memmove(&explorer->base_filename[explorer->input_cursor_pos - 1], &explorer->base_filename[explorer->input_cursor_pos], base_len - explorer->input_cursor_pos + 1);
+                explorer->input_cursor_pos--;
+            } else if (explorer->extension_editable) {
+                // Remove character before cursor in extension
+                int ext_pos = explorer->input_cursor_pos - base_len;
+                int ext_len = strlen(explorer->extension);
+                if (ext_pos > 0) {
+                    memmove(&explorer->extension[ext_pos - 1], &explorer->extension[ext_pos], ext_len - ext_pos + 1);
+                    explorer->input_cursor_pos--;
+                }
+            }
             // Update full filename
             snprintf(explorer->filename_input, MAX_FILENAME_LENGTH, "%s%s", explorer->base_filename, explorer->extension);
         }
     } else if (unicode == 127) // Delete key
     {
-        if (explorer->input_cursor_pos < base_len) {
-            // Remove character at cursor position
-            memmove(&explorer->base_filename[explorer->input_cursor_pos], &explorer->base_filename[explorer->input_cursor_pos + 1], base_len - explorer->input_cursor_pos);
+        int total_len = strlen(explorer->filename_input);
+        if (explorer->input_cursor_pos < total_len) {
+            if (explorer->input_cursor_pos < base_len) {
+                // Remove character at cursor position in base_filename
+                memmove(&explorer->base_filename[explorer->input_cursor_pos], &explorer->base_filename[explorer->input_cursor_pos + 1], base_len - explorer->input_cursor_pos);
+            } else if (explorer->extension_editable) {
+                // Remove character at cursor position in extension
+                int ext_pos = explorer->input_cursor_pos - base_len;
+                int ext_len = strlen(explorer->extension);
+                if (ext_pos < ext_len) {
+                    memmove(&explorer->extension[ext_pos], &explorer->extension[ext_pos + 1], ext_len - ext_pos);
+                }
+            }
             // Update full filename
             snprintf(explorer->filename_input, MAX_FILENAME_LENGTH, "%s%s", explorer->base_filename, explorer->extension);
         }
@@ -677,6 +708,9 @@ void handle_file_explorer_click(app_t *app, sfVector2i mouse_pos) {
                 if (i == 4) {
                     // "personalised" selected - enable extension editing
                     explorer->extension_editable = 1;
+                    sfText_setString(explorer->format_button_label, "custom");
+                    // Set cursor to end of full filename for editing
+                    explorer->input_cursor_pos = strlen(explorer->filename_input);
                 } else {
                     // Specific format selected
                     explorer->extension_editable = 0;

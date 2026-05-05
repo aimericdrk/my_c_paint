@@ -92,51 +92,55 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     sfRectangleShape_setOutlineColor(ui->color_preview, preview_outline);
     sfRectangleShape_setOutlineThickness(ui->color_preview, preview_outline_thickness);
 
-    // Color sliders (R, G, B)
-    cJSON *r_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "r") : NULL;
-    cJSON *g_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "g") : NULL;
-    cJSON *b_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "b") : NULL;
+    // Color sliders (R, G, B, A)
+    cJSON *r_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "r_slider") : NULL;
+    cJSON *g_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "g_slider") : NULL;
+    cJSON *b_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "b_slider") : NULL;
+    cJSON *a_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "a_slider") : NULL;
 
-    int slider_x = toolbar_x + 25;
-    float slider_y[] = {config_get_int(r_slider_cfg, "y", 640), config_get_int(g_slider_cfg, "y", 690), config_get_int(b_slider_cfg, "y", 740)};
+    int slider_x = toolbar_x + config_get_int(sliders_cfg, "x", 25);
+    float slider_y[] = {config_get_int(r_slider_cfg, "y", 520), config_get_int(g_slider_cfg, "y", 570), config_get_int(b_slider_cfg, "y", 620), config_get_int(a_slider_cfg, "y", 670)};
 
-    sfColor slider_colors[] = {config_get_color(r_slider_cfg, "bar_color", (sfColor){255, 100, 100, 255}), config_get_color(g_slider_cfg, "bar_color", (sfColor){100, 255, 100, 255}),
-                               config_get_color(b_slider_cfg, "bar_color", (sfColor){100, 100, 255, 255})};
+    sfColor slider_colors[] = {config_get_color(r_slider_cfg, "color", (sfColor){255, 100, 100, 255}), config_get_color(g_slider_cfg, "color", (sfColor){100, 255, 100, 255}),
+                               config_get_color(b_slider_cfg, "color", (sfColor){100, 100, 255, 255}), config_get_color(a_slider_cfg, "color", (sfColor){200, 200, 200, 255})};
 
-    int slider_width = config_get_int(r_slider_cfg, "bar_width", 200);
-    int slider_height = config_get_int(r_slider_cfg, "bar_height", 20);
+    int slider_width = config_get_int(sliders_cfg, "width", 200);
+    int slider_height = config_get_int(sliders_cfg, "height", 20);
 
     ui->r_bar = sfRectangleShape_create();
     ui->g_bar = sfRectangleShape_create();
     ui->b_bar = sfRectangleShape_create();
-    sfRectangleShape **bars[] = {&ui->r_bar, &ui->g_bar, &ui->b_bar};
+    ui->a_bar = sfRectangleShape_create();
+    sfRectangleShape **bars[] = {&ui->r_bar, &ui->g_bar, &ui->b_bar, &ui->a_bar};
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         sfRectangleShape_setSize(*bars[i], (sfVector2f){slider_width, slider_height});
         sfRectangleShape_setPosition(*bars[i], (sfVector2f){slider_x, slider_y[i]});
         sfRectangleShape_setFillColor(*bars[i], slider_colors[i]);
     }
 
-    int handle_width = config_get_int(r_slider_cfg, "handle_width", 10);
-    int handle_height = config_get_int(r_slider_cfg, "handle_height", 30);
+    int handle_width = config_get_int(sliders_cfg, "handle_width", 10);
+    int handle_height = config_get_int(sliders_cfg, "handle_height", 30);
+    int handle_y_offset = config_get_int(r_slider_cfg, "handle_y_offset", -5);
 
     ui->r_slider = sfRectangleShape_create();
     ui->g_slider = sfRectangleShape_create();
     ui->b_slider = sfRectangleShape_create();
-    sfRectangleShape **sliders[] = {&ui->r_slider, &ui->g_slider, &ui->b_slider};
+    ui->a_slider = sfRectangleShape_create();
+    sfRectangleShape **sliders[] = {&ui->r_slider, &ui->g_slider, &ui->b_slider, &ui->a_slider};
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         sfRectangleShape_setSize(*sliders[i], (sfVector2f){handle_width, handle_height});
-        sfRectangleShape_setPosition(*sliders[i], (sfVector2f){slider_x, slider_y[i] - 5});
+        sfRectangleShape_setPosition(*sliders[i], (sfVector2f){slider_x, slider_y[i] + handle_y_offset});
         sfRectangleShape_setFillColor(*sliders[i], sfWhite);
         sfRectangleShape_setOutlineColor(*sliders[i], sfBlack);
         sfRectangleShape_setOutlineThickness(*sliders[i], 2);
     }
 
     // Size slider
-    cJSON *size_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "size") : NULL;
-    int size_slider_y = config_get_int(size_slider_cfg, "y", 805);
-    sfColor size_slider_color = config_get_color(size_slider_cfg, "bar_color", (sfColor){150, 150, 150, 255});
+    cJSON *size_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "size_slider") : NULL;
+    int size_slider_y = config_get_int(size_slider_cfg, "y", 685);
+    sfColor size_slider_color = config_get_color(size_slider_cfg, "color", (sfColor){150, 150, 150, 255});
 
     ui->size_bar = sfRectangleShape_create();
     sfRectangleShape_setSize(ui->size_bar, (sfVector2f){slider_width, slider_height});
@@ -145,7 +149,7 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
 
     ui->size_slider = sfRectangleShape_create();
     sfRectangleShape_setSize(ui->size_slider, (sfVector2f){handle_width, handle_height});
-    sfRectangleShape_setPosition(ui->size_slider, (sfVector2f){slider_x + 20, size_slider_y - 5});
+    sfRectangleShape_setPosition(ui->size_slider, (sfVector2f){slider_x + 20, size_slider_y + handle_y_offset});
     sfRectangleShape_setFillColor(ui->size_slider, sfWhite);
     sfRectangleShape_setOutlineColor(ui->size_slider, sfBlack);
     sfRectangleShape_setOutlineThickness(ui->size_slider, 2);
@@ -280,7 +284,8 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
         sfText_setString(ui->options_dropdown_labels[i], options_names[i]);
         sfText_setCharacterSize(ui->options_dropdown_labels[i], 16);
         sfText_setFillColor(ui->options_dropdown_labels[i], sfWhite);
-        sfText_setPosition(ui->options_dropdown_labels[i], (sfVector2f){options_dropdown_x + 35, options_dropdown_y + 7 + i * options_item_height});
+        sfText_setPosition(ui->options_dropdown_labels[i], (sfVector2f){options_dropdown_x + (i != 2 && i != 4 && i != 5 ? 35 : 10),
+             options_dropdown_y + 7 + i * options_item_height});
 
         // Create checkbox
         ui->options_checkboxes[i] = sfRectangleShape_create();
@@ -328,12 +333,16 @@ void cleanup_ui(ui_elements_t *ui) {
         sfRectangleShape_destroy(ui->g_slider);
     if (ui->b_slider)
         sfRectangleShape_destroy(ui->b_slider);
+    if (ui->a_slider)
+        sfRectangleShape_destroy(ui->a_slider);
     if (ui->r_bar)
         sfRectangleShape_destroy(ui->r_bar);
     if (ui->g_bar)
         sfRectangleShape_destroy(ui->g_bar);
     if (ui->b_bar)
         sfRectangleShape_destroy(ui->b_bar);
+    if (ui->a_bar)
+        sfRectangleShape_destroy(ui->a_bar);
     if (ui->size_slider)
         sfRectangleShape_destroy(ui->size_slider);
     if (ui->size_bar)
@@ -418,53 +427,110 @@ void render_ui(sfRenderWindow *window, app_t *app) {
     sfRenderWindow_drawRectangleShape(window, ui->r_bar, NULL);
     sfRenderWindow_drawRectangleShape(window, ui->g_bar, NULL);
     sfRenderWindow_drawRectangleShape(window, ui->b_bar, NULL);
+    sfRenderWindow_drawRectangleShape(window, ui->a_bar, NULL);
 
-    // Update slider positions based on color
-    sfRectangleShape_setPosition(ui->r_slider, (sfVector2f){app->toolbar_x + 25 + (paint->current_color.r / 255.0f) * 190, 635});
-    sfRectangleShape_setPosition(ui->g_slider, (sfVector2f){app->toolbar_x + 25 + (paint->current_color.g / 255.0f) * 190, 685});
-    sfRectangleShape_setPosition(ui->b_slider, (sfVector2f){app->toolbar_x + 25 + (paint->current_color.b / 255.0f) * 190, 735});
+    // Update slider positions based on color - get config sections
+    ui_config_t *config = app->config;
+    cJSON *toolbar_cfg = config ? config_get_section(config, "toolbar") : NULL;
+    cJSON *sliders_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "sliders") : NULL;
+    cJSON *r_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "r_slider") : NULL;
+    cJSON *g_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "g_slider") : NULL;
+    cJSON *b_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "b_slider") : NULL;
+    cJSON *a_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "a_slider") : NULL;
+    cJSON *size_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "size_slider") : NULL;
+
+    int slider_base_x = app->toolbar_x + config_get_int(sliders_cfg, "x", 25);
+    int slider_range = config_get_int(sliders_cfg, "slider_range", 190);
+    int r_slider_y = config_get_int(r_slider_cfg, "y", 520);
+    int g_slider_y = config_get_int(g_slider_cfg, "y", 570);
+    int b_slider_y = config_get_int(b_slider_cfg, "y", 620);
+    int a_slider_y = config_get_int(a_slider_cfg, "y", 670);
+    int size_slider_y = config_get_int(size_slider_cfg, "y", 685);
+    int handle_y_offset = config_get_int(r_slider_cfg, "handle_y_offset", -5);
+
+    sfRectangleShape_setPosition(ui->r_slider, (sfVector2f){slider_base_x + (paint->current_color.r / 255.0f) * slider_range, r_slider_y + handle_y_offset});
+    sfRectangleShape_setPosition(ui->g_slider, (sfVector2f){slider_base_x + (paint->current_color.g / 255.0f) * slider_range, g_slider_y + handle_y_offset});
+    sfRectangleShape_setPosition(ui->b_slider, (sfVector2f){slider_base_x + (paint->current_color.b / 255.0f) * slider_range, b_slider_y + handle_y_offset});
+    sfRectangleShape_setPosition(ui->a_slider, (sfVector2f){slider_base_x + (paint->current_color.a / 255.0f) * slider_range, a_slider_y + handle_y_offset});
 
     sfRenderWindow_drawRectangleShape(window, ui->r_slider, NULL);
     sfRenderWindow_drawRectangleShape(window, ui->g_slider, NULL);
     sfRenderWindow_drawRectangleShape(window, ui->b_slider, NULL);
+    sfRenderWindow_drawRectangleShape(window, ui->a_slider, NULL);
 
     // Draw size slider
     sfRenderWindow_drawRectangleShape(window, ui->size_bar, NULL);
 
     // Update size slider position
-    float size_percent = (paint->brush_size - 1) / 49.0f; // Size range 1-50
-    sfRectangleShape_setPosition(ui->size_slider, (sfVector2f){app->toolbar_x + 25 + size_percent * 190, 800});
+    int size_min = config_get_int(size_slider_cfg, "min", 1);
+    int size_max = config_get_int(size_slider_cfg, "max", 50);
+    float size_percent = (paint->brush_size - size_min) / (float)(size_max - size_min);
+    sfRectangleShape_setPosition(ui->size_slider, (sfVector2f){slider_base_x + size_percent * slider_range, size_slider_y + handle_y_offset});
     sfRenderWindow_drawRectangleShape(window, ui->size_slider, NULL);
 
-    // Draw labels
+    // Draw labels from config
+    cJSON *color_preview_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "color_preview") : NULL;
+
     sfText *text = sfText_create(ui->font);
-    sfText_setCharacterSize(text, 16);
+    int label_font_size = config_get_int(color_preview_cfg, "label_font_size", 16);
+    sfText_setCharacterSize(text, label_font_size);
     sfText_setFillColor(text, sfWhite);
 
-    sfText_setString(text, "Color:");
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + 15, 535});
+    // Color label
+    const char *color_label = config_get_string(color_preview_cfg, "label_text", "Color:");
+    int color_label_x = config_get_int(color_preview_cfg, "label_x", 15);
+    int color_label_y = config_get_int(color_preview_cfg, "label_y", 535);
+    sfText_setString(text, color_label);
+    sfText_setPosition(text, (sfVector2f){app->toolbar_x + color_label_x, color_label_y});
     sfRenderWindow_drawText(window, text, NULL);
 
-    sfText_setString(text, "R");
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + 230, 640});
+    // R label
+    const char *r_label = config_get_string(r_slider_cfg, "label", "R");
+    int r_label_x = config_get_int(r_slider_cfg, "label_x", 230);
+    int r_label_y = config_get_int(r_slider_cfg, "label_y", 640);
+    sfText_setString(text, r_label);
+    sfText_setPosition(text, (sfVector2f){app->toolbar_x + r_label_x, r_label_y});
     sfRenderWindow_drawText(window, text, NULL);
 
-    sfText_setString(text, "G");
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + 230, 690});
+    // G label
+    const char *g_label = config_get_string(g_slider_cfg, "label", "G");
+    int g_label_x = config_get_int(g_slider_cfg, "label_x", 230);
+    int g_label_y = config_get_int(g_slider_cfg, "label_y", 690);
+    sfText_setString(text, g_label);
+    sfText_setPosition(text, (sfVector2f){app->toolbar_x + g_label_x, g_label_y});
     sfRenderWindow_drawText(window, text, NULL);
 
-    sfText_setString(text, "B");
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + 230, 740});
+    // B label
+    const char *b_label = config_get_string(b_slider_cfg, "label", "B");
+    int b_label_x = config_get_int(b_slider_cfg, "label_x", 230);
+    int b_label_y = config_get_int(b_slider_cfg, "label_y", 740);
+    sfText_setString(text, b_label);
+    sfText_setPosition(text, (sfVector2f){app->toolbar_x + b_label_x, b_label_y});
     sfRenderWindow_drawText(window, text, NULL);
 
-    sfText_setString(text, "Size:");
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + 15, 770});
+    // A label
+    const char *a_label = config_get_string(a_slider_cfg, "label", "A");
+    int a_label_x = config_get_int(a_slider_cfg, "label_x", 230);
+    int a_label_y = config_get_int(a_slider_cfg, "label_y", 670);
+    sfText_setString(text, a_label);
+    sfText_setPosition(text, (sfVector2f){app->toolbar_x + a_label_x, a_label_y});
     sfRenderWindow_drawText(window, text, NULL);
 
+    // Size label
+    const char *size_label = config_get_string(size_slider_cfg, "label", "Size:");
+    int size_label_x = config_get_int(size_slider_cfg, "label_x", 15);
+    int size_label_y = config_get_int(size_slider_cfg, "label_y", 770);
+    sfText_setString(text, size_label);
+    sfText_setPosition(text, (sfVector2f){app->toolbar_x + size_label_x, size_label_y});
+    sfRenderWindow_drawText(window, text, NULL);
+
+    // Size value label
     char size_str[32];
     sprintf(size_str, "%d px", paint->brush_size);
+    int size_value_x = config_get_int(size_slider_cfg, "value_label_x", 230);
+    int size_value_y = config_get_int(size_slider_cfg, "value_label_y", 810);
     sfText_setString(text, size_str);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + 230, 810});
+    sfText_setPosition(text, (sfVector2f){app->toolbar_x + size_value_x, size_value_y});
     sfRenderWindow_drawText(window, text, NULL);
 
     sfText_destroy(text);
@@ -516,7 +582,7 @@ void render_ui(sfRenderWindow *window, app_t *app) {
             sfRenderWindow_drawRectangleShape(window, ui->options_dropdown_buttons[i], NULL);
 
             // Draw checkbox (not for symmetry option - index 2)
-            if (i != 2) {
+            if (i != 2 && i != 4 && i != 5) {
                 sfRectangleShape_setFillColor(ui->options_checkboxes[i], (sfColor){30, 30, 35, 255});
 
                 // Determine if checkbox should be checked
@@ -686,10 +752,17 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
         return;
     }
 
+    sfVector2f a_pos = sfRectangleShape_getPosition(app->ui->a_bar);
+    if (is_point_in_rect(mouse_pos, a_pos, slider_size)) {
+        app->dragging_slider = 3;
+        update_color_slider(app, mouse_pos);
+        return;
+    }
+
     // Check size slider
     sfVector2f size_pos = sfRectangleShape_getPosition(app->ui->size_bar);
     if (is_point_in_rect(mouse_pos, size_pos, slider_size)) {
-        app->dragging_slider = 3;
+        app->dragging_slider = 4;
         update_color_slider(app, mouse_pos);
         return;
     }
@@ -715,6 +788,12 @@ void update_color_slider(app_t *app, sfVector2i mouse_pos) {
         percent = fmax(0, fmin(1, percent));
         app->paint->current_color.b = (uint8_t)(percent * 255);
     } else if (app->dragging_slider == 3) {
+        // Alpha slider
+        sfVector2f pos = sfRectangleShape_getPosition(app->ui->a_bar);
+        float percent = (mouse_pos.x - pos.x) / 200.0f;
+        percent = fmax(0, fmin(1, percent));
+        app->paint->current_color.a = (uint8_t)(percent * 255);
+    } else if (app->dragging_slider == 4) {
         // Size slider
         sfVector2f pos = sfRectangleShape_getPosition(app->ui->size_bar);
         float percent = (mouse_pos.x - pos.x) / 200.0f;

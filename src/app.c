@@ -172,30 +172,30 @@ void handle_events(app_t *app) {
                 printf("Loaded from output.png\n");
             }
 
-            // Symmetry modes (M key to cycle)
-            if (event.key.code == sfKeyM) {
-                app->paint->symmetry_mode = (app->paint->symmetry_mode + 1) % 6;
-                const char *modes[] = {"None", "Horizontal", "Vertical", "Both", "Radial 4", "Radial 8"};
-                printf("Symmetry mode: %s\n", modes[app->paint->symmetry_mode]);
-            }
+            // // Symmetry modes (M key to cycle)
+            // if (event.key.code == sfKeyM) {
+            //     app->paint->symmetry_mode = (app->paint->symmetry_mode + 1) % 6;
+            //     const char *modes[] = {"None", "Horizontal", "Vertical", "Both", "Radial 4", "Radial 8"};
+            //     printf("Symmetry mode: %s\n", modes[app->paint->symmetry_mode]);
+            // }
 
-            // Flip canvas horizontally (H key)
-            if (event.key.code == sfKeyH) {
-                save_undo_state(app->paint);
-                flip_canvas_horizontal(app->paint);
-            }
+            // // Flip canvas horizontally (H key)
+            // if (event.key.code == sfKeyH) {
+            //     save_undo_state(app->paint);
+            //     flip_canvas_horizontal(app->paint);
+            // }
 
-            // Flip canvas vertically (V key)
-            if (event.key.code == sfKeyV) {
-                save_undo_state(app->paint);
-                flip_canvas_vertical(app->paint);
-            }
+            // // Flip canvas vertically (V key)
+            // if (event.key.code == sfKeyV) {
+            //     save_undo_state(app->paint);
+            //     flip_canvas_vertical(app->paint);
+            // }
 
-            // Toggle grid (G key)
-            if (event.key.code == sfKeyG) {
-                app->paint->show_grid = !app->paint->show_grid;
-                printf("Grid %s\n", app->paint->show_grid ? "ON" : "OFF");
-            }
+            // // Toggle grid (G key)
+            // if (event.key.code == sfKeyG) {
+            //     app->paint->show_grid = !app->paint->show_grid;
+            //     printf("Grid %s\n", app->paint->show_grid ? "ON" : "OFF");
+            // }
 
             // Toggle snap to grid (Shift+G)
             if (event.key.shift && event.key.code == sfKeyG) {

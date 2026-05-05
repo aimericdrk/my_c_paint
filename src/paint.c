@@ -26,7 +26,7 @@ paint_state_t *init_paint_state(int canvas_width, int canvas_height, int canvas_
     sfSprite_setPosition(paint->canvas_sprite, (sfVector2f){canvas_x, canvas_y});
 
     // Initialize state
-    paint->current_color = sfBlack;
+    paint->current_color = (sfColor){0, 0, 0, 255}; // Black with full opacity
     paint->alpha = 255;
     paint->brush_size = 5;
     paint->current_tool = TOOL_PEN;
@@ -142,7 +142,6 @@ void draw_with_tool(paint_state_t *paint, sfVector2i pos) {
 
     // Apply alpha to color
     sfColor draw_color = paint->current_color;
-    draw_color.a = paint->alpha;
 
     switch (paint->current_tool) {
     case TOOL_PEN:
@@ -157,7 +156,7 @@ void draw_with_tool(paint_state_t *paint, sfVector2i pos) {
         // Soft brush with multiple circles
         for (int i = 0; i < 3; i++) {
             sfColor soft_color = draw_color;
-            soft_color.a = (paint->alpha * (i * 10)) / 255;
+            soft_color.a = (paint->current_color.a * (i * 10)) / 255;
             draw_circle_point(paint->canvas, pos, soft_color, paint->brush_size + i * 2);
         }
         break;
@@ -173,7 +172,7 @@ void draw_with_tool(paint_state_t *paint, sfVector2i pos) {
             sfVector2i spray_pos = {pos.x + offset_x, pos.y + offset_y};
             if (spray_pos.x >= 0 && spray_pos.x < paint->canvas_width && spray_pos.y >= 0 && spray_pos.y < paint->canvas_height) {
                 sfColor spray_color = draw_color;
-                spray_color.a = (paint->alpha * (80 + (rand() % 80))) / 255;
+                spray_color.a = (paint->current_color.a * (80 + (rand() % 80))) / 255;
                 draw_circle_point(paint->canvas, spray_pos, spray_color, 1 + (rand() % 2));
             }
         }
@@ -390,12 +389,10 @@ void add_recent_color(paint_state_t *paint, sfColor color) {
     }
 }
 
-// Apply symmetry to drawing position
-void draw_with_symmetry(paint_state_t *paint, sfVector2i pos) {
+// Helper function to draw at a position with current tool
+static void draw_at_position(paint_state_t *paint, sfVector2i pos) {
     sfColor draw_color = paint->current_color;
-    draw_color.a = paint->alpha;
 
-    // Draw at original position
     switch (paint->current_tool) {
     case TOOL_PEN:
         draw_circle_point(paint->canvas, pos, draw_color, paint->brush_size);
@@ -406,38 +403,51 @@ void draw_with_symmetry(paint_state_t *paint, sfVector2i pos) {
     case TOOL_BRUSH:
         for (int i = 0; i < 3; i++) {
             sfColor soft_color = draw_color;
-            soft_color.a = (paint->alpha * (100 - i * 20)) / 255;
+            soft_color.a = (paint->current_color.a * (100 - i * 20)) / 255;
             draw_circle_point(paint->canvas, pos, soft_color, paint->brush_size + i * 2);
+        }
+        break;
+    case TOOL_SPRAY:
+        // Spray effect with random particles
+        for (int i = 0; i < 30; i++) {
+            int radius = paint->brush_size * 2;
+            float angle = (float)(rand() % 360) * M_PI / 180.0f;
+            float distance = (float)(rand() % (radius * 100)) / 100.0f;
+            int offset_x = (int)(distance * cos(angle));
+            int offset_y = (int)(distance * sin(angle));
+            sfVector2i spray_pos = {pos.x + offset_x, pos.y + offset_y};
+            if (spray_pos.x >= 0 && spray_pos.x < paint->canvas_width && spray_pos.y >= 0 && spray_pos.y < paint->canvas_height) {
+                sfColor spray_color = draw_color;
+                spray_color.a = (paint->current_color.a * (80 + (rand() % 80))) / 255;
+                draw_circle_point(paint->canvas, spray_pos, spray_color, 1 + (rand() % 2));
+            }
         }
         break;
     default:
         draw_circle_point(paint->canvas, pos, draw_color, paint->brush_size);
         break;
     }
+}
+
+// Apply symmetry to drawing position
+void draw_with_symmetry(paint_state_t *paint, sfVector2i pos) {
+    // Draw at original position
+    draw_at_position(paint, pos);
 
     // Apply symmetry
     if (paint->symmetry_mode == SYMMETRY_HORIZONTAL || paint->symmetry_mode == SYMMETRY_BOTH) {
-        sfVector2i sym_pos = {paint->canvas_width - pos.x - 1, pos.y};
-        if (paint->current_tool == TOOL_PEN)
-            draw_circle_point(paint->canvas, sym_pos, draw_color, paint->brush_size);
-        else if (paint->current_tool == TOOL_ERASER)
-            draw_circle_point(paint->canvas, sym_pos, sfWhite, paint->brush_size * 2);
+        sfVector2i sym_pos = {pos.x, paint->canvas_height - pos.y - 1};
+        draw_at_position(paint, sym_pos);
     }
 
     if (paint->symmetry_mode == SYMMETRY_VERTICAL || paint->symmetry_mode == SYMMETRY_BOTH) {
-        sfVector2i sym_pos = {pos.x, paint->canvas_height - pos.y - 1};
-        if (paint->current_tool == TOOL_PEN)
-            draw_circle_point(paint->canvas, sym_pos, draw_color, paint->brush_size);
-        else if (paint->current_tool == TOOL_ERASER)
-            draw_circle_point(paint->canvas, sym_pos, sfWhite, paint->brush_size * 2);
+        sfVector2i sym_pos = {paint->canvas_width - pos.x - 1, pos.y};
+        draw_at_position(paint, sym_pos);
     }
 
     if (paint->symmetry_mode == SYMMETRY_BOTH) {
         sfVector2i sym_pos = {paint->canvas_width - pos.x - 1, paint->canvas_height - pos.y - 1};
-        if (paint->current_tool == TOOL_PEN)
-            draw_circle_point(paint->canvas, sym_pos, draw_color, paint->brush_size);
-        else if (paint->current_tool == TOOL_ERASER)
-            draw_circle_point(paint->canvas, sym_pos, sfWhite, paint->brush_size * 2);
+        draw_at_position(paint, sym_pos);
     }
 
     if (paint->symmetry_mode == SYMMETRY_RADIAL_4) {
@@ -445,11 +455,36 @@ void draw_with_symmetry(paint_state_t *paint, sfVector2i pos) {
         sfVector2i positions[4] = {
             {pos.x, pos.y}, {paint->canvas_width - pos.x - 1, pos.y}, {pos.x, paint->canvas_height - pos.y - 1}, {paint->canvas_width - pos.x - 1, paint->canvas_height - pos.y - 1}};
         for (int i = 1; i < 4; i++) {
-            if (paint->current_tool == TOOL_PEN)
-                draw_circle_point(paint->canvas, positions[i], draw_color, paint->brush_size);
-            else if (paint->current_tool == TOOL_ERASER)
-                draw_circle_point(paint->canvas, positions[i], sfWhite, paint->brush_size * 2);
+            draw_at_position(paint, positions[i]);
         }
+    }
+
+    if (paint->symmetry_mode == SYMMETRY_RADIAL_8) {
+        // 8-way radial symmetry (includes diagonals)
+        int center_x = paint->canvas_width / 2;
+        int center_y = paint->canvas_height / 2;
+        int dx = pos.x - center_x;
+        int dy = pos.y - center_y;
+
+        sfVector2i positions[8] = {
+            {pos.x, pos.y},                 // Original
+            {center_x - dx, center_y + dy}, // Horizontal flip
+            {center_x + dx, center_y - dy}, // Vertical flip
+            {center_x - dx, center_y - dy}, // Both flips
+            {center_x + dy, center_y + dx}, // Diagonal swap
+            {center_x - dy, center_y + dx}, // Diagonal + H flip
+            {center_x + dy, center_y - dx}, // Diagonal + V flip
+            {center_x - dy, center_y - dx}  // Diagonal + both flips
+        };
+
+        for (int i = 1; i < 8; i++) {
+            draw_at_position(paint, positions[i]);
+        }
+    }
+
+    // For spray tool, display the canvas after drawing all particles
+    if (paint->current_tool == TOOL_SPRAY) {
+        sfRenderTexture_display(paint->canvas);
     }
 }
 

@@ -42,6 +42,42 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     sfRectangleShape_setPosition(ui->bg, (sfVector2f){toolbar_x, 0});
     sfRectangleShape_setFillColor(ui->bg, toolbar_bg_color);
 
+    // Tab buttons
+    cJSON *tabs_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "tabs") : NULL;
+    int tab_start_y = config_get_int(tabs_cfg, "start_y", 60);
+    int tab_btn_width = config_get_int(tabs_cfg, "button_width", 80);
+    int tab_btn_height = config_get_int(tabs_cfg, "button_height", 40);
+    int tab_spacing = config_get_int(tabs_cfg, "spacing", 5);
+    int tab_x_offset = config_get_int(tabs_cfg, "offset_x", 5);
+    sfColor tab_btn_color = config_get_color(tabs_cfg, "button_color", (sfColor){60, 60, 65, 255});
+    sfColor tab_btn_outline = config_get_color(tabs_cfg, "outline_color", (sfColor){80, 80, 85, 255});
+    int tab_outline_thickness = config_get_int(tabs_cfg, "outline_thickness", 2);
+    int tab_font_size = config_get_int(tabs_cfg, "font_size", 18);
+    int tab_text_offset_x = config_get_int(tabs_cfg, "text_offset_x", 10);
+    int tab_text_offset_y = config_get_int(tabs_cfg, "text_offset_y", 8);
+
+    ui->tab_count = 3;
+    ui->tab_buttons = malloc(sizeof(sfRectangleShape *) * ui->tab_count);
+    ui->tab_labels = malloc(sizeof(sfText *) * ui->tab_count);
+
+    const char *tab_names[] = {"Pen", "Color", "Layer"};
+
+    for (int i = 0; i < ui->tab_count; i++) {
+        ui->tab_buttons[i] = sfRectangleShape_create();
+        sfRectangleShape_setSize(ui->tab_buttons[i], (sfVector2f){tab_btn_width, tab_btn_height});
+        sfRectangleShape_setPosition(ui->tab_buttons[i], (sfVector2f){toolbar_x + tab_x_offset + i * (tab_btn_width + tab_spacing), tab_start_y});
+        sfRectangleShape_setFillColor(ui->tab_buttons[i], tab_btn_color);
+        sfRectangleShape_setOutlineColor(ui->tab_buttons[i], tab_btn_outline);
+        sfRectangleShape_setOutlineThickness(ui->tab_buttons[i], tab_outline_thickness);
+
+        ui->tab_labels[i] = sfText_create(font);
+        sfText_setString(ui->tab_labels[i], tab_names[i]);
+        sfText_setFont(ui->tab_labels[i], font);
+        sfText_setCharacterSize(ui->tab_labels[i], tab_font_size);
+        sfText_setFillColor(ui->tab_labels[i], sfWhite);
+        sfText_setPosition(ui->tab_labels[i], (sfVector2f){toolbar_x + tab_x_offset + i * (tab_btn_width + tab_spacing) + tab_text_offset_x, tab_start_y + tab_text_offset_y});
+    }
+
     // Tool buttons
     ui->button_count = 8;
     ui->buttons = malloc(sizeof(sfRectangleShape *) * ui->button_count);
@@ -49,9 +85,9 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     ui->tool_icons = malloc(sizeof(sfCircleShape *) * ui->button_count);
 
     // Load tool button config
-    int tool_start_y = config_get_int(tools_cfg, "start_y", 60);
+    int tool_start_y = config_get_int(tools_cfg, "start_y", 115);
     int tool_btn_width = config_get_int(tools_cfg, "button_width", 220);
-    int tool_btn_height = config_get_int(tools_cfg, "button_height", 50);
+    int tool_btn_height = config_get_int(tools_cfg, "button_height", 40);
     int tool_spacing = config_get_int(tools_cfg, "spacing", 60);
     int tool_x_offset = config_get_int(tools_cfg, "x_offset", 15);
     sfColor tool_btn_color = config_get_color(tools_cfg, "button_color", (sfColor){70, 70, 75, 255});
@@ -302,11 +338,171 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
         sfRectangleShape_setOutlineThickness(ui->options_checkboxes[i], 2);
     }
 
+    // Layer panel initialization
+    cJSON *layers_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "layers") : NULL;
+
+    ui->layer_items = malloc(sizeof(sfRectangleShape *) * MAX_LAYERS);
+    ui->layer_names = malloc(sizeof(sfText *) * MAX_LAYERS);
+    ui->layer_visibility_buttons = malloc(sizeof(sfRectangleShape *) * MAX_LAYERS);
+    ui->layer_opacity_bars = malloc(sizeof(sfRectangleShape *) * MAX_LAYERS);
+    ui->layer_opacity_sliders = malloc(sizeof(sfRectangleShape *) * MAX_LAYERS);
+    ui->layer_panel_scroll_offset = 0;
+    ui->dragging_layer_opacity = -1;
+
+    int layer_panel_x = toolbar_x + config_get_int(layers_cfg, "panel_x", 15);
+    int layer_panel_y = config_get_int(layers_cfg, "panel_y", 115);
+    int layer_panel_width = config_get_int(layers_cfg, "panel_width", 270);
+    int layer_item_height = config_get_int(layers_cfg, "item_height", 50);
+    sfColor layer_item_color = config_get_color(layers_cfg, "item_color", (sfColor){60, 60, 65, 255});
+    sfColor layer_item_outline = config_get_color(layers_cfg, "item_outline_color", (sfColor){80, 80, 85, 255});
+
+    // Create layer items (will be shown/hidden based on actual layer count)
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        ui->layer_items[i] = sfRectangleShape_create();
+        sfRectangleShape_setSize(ui->layer_items[i], (sfVector2f){layer_panel_width, layer_item_height});
+        sfRectangleShape_setPosition(ui->layer_items[i], (sfVector2f){layer_panel_x, layer_panel_y + i * (layer_item_height + 5)});
+        sfRectangleShape_setFillColor(ui->layer_items[i], layer_item_color);
+        sfRectangleShape_setOutlineColor(ui->layer_items[i], layer_item_outline);
+        sfRectangleShape_setOutlineThickness(ui->layer_items[i], 1);
+
+        ui->layer_names[i] = sfText_create(font);
+        sfText_setCharacterSize(ui->layer_names[i], 14);
+        sfText_setFillColor(ui->layer_names[i], sfWhite);
+
+        ui->layer_visibility_buttons[i] = sfRectangleShape_create();
+        sfRectangleShape_setSize(ui->layer_visibility_buttons[i], (sfVector2f){20, 20});
+        sfRectangleShape_setFillColor(ui->layer_visibility_buttons[i], (sfColor){100, 100, 105, 255});
+        sfRectangleShape_setOutlineColor(ui->layer_visibility_buttons[i], layer_item_outline);
+        sfRectangleShape_setOutlineThickness(ui->layer_visibility_buttons[i], 1);
+
+        ui->layer_opacity_bars[i] = sfRectangleShape_create();
+        sfRectangleShape_setSize(ui->layer_opacity_bars[i], (sfVector2f){180, 10});
+        sfRectangleShape_setFillColor(ui->layer_opacity_bars[i], (sfColor){70, 70, 75, 255});
+
+        ui->layer_opacity_sliders[i] = sfRectangleShape_create();
+        sfRectangleShape_setSize(ui->layer_opacity_sliders[i], (sfVector2f){8, 14});
+        sfRectangleShape_setFillColor(ui->layer_opacity_sliders[i], sfWhite);
+        sfRectangleShape_setOutlineColor(ui->layer_opacity_sliders[i], sfBlack);
+        sfRectangleShape_setOutlineThickness(ui->layer_opacity_sliders[i], 1);
+    }
+
+    // Scrollbar
+    ui->layer_scrollbar = sfRectangleShape_create();
+    sfColor scrollbar_color = config_get_color(layers_cfg, "scrollbar_color", (sfColor){70, 70, 75, 255});
+    sfRectangleShape_setFillColor(ui->layer_scrollbar, scrollbar_color);
+
+    ui->layer_scrollbar_thumb = sfRectangleShape_create();
+    sfColor thumb_color = config_get_color(layers_cfg, "scrollbar_thumb_color", (sfColor){120, 120, 125, 255});
+    sfRectangleShape_setFillColor(ui->layer_scrollbar_thumb, thumb_color);
+
+    // Control buttons
+    int button_width = config_get_int(layers_cfg, "button_width", 55);
+    int button_height = config_get_int(layers_cfg, "button_height", 30);
+    int button_y = config_get_int(layers_cfg, "button_y", 680);
+    int button_spacing = config_get_int(layers_cfg, "button_spacing", 5);
+    sfColor button_color = config_get_color(layers_cfg, "button_color", (sfColor){70, 70, 75, 255});
+    sfColor button_outline = config_get_color(layers_cfg, "item_outline_color", (sfColor){80, 80, 85, 255});
+
+    const char *button_labels[] = {"New", "Del", "Merge", "Up", "Down"};
+    sfRectangleShape **buttons[] = {&ui->layer_new_button, &ui->layer_delete_button, &ui->layer_merge_button, &ui->layer_up_button, &ui->layer_down_button};
+    sfText **labels[] = {&ui->layer_new_label, &ui->layer_delete_label, &ui->layer_merge_label, &ui->layer_up_label, &ui->layer_down_label};
+
+    for (int i = 0; i < 5; i++) {
+        *buttons[i] = sfRectangleShape_create();
+        sfRectangleShape_setSize(*buttons[i], (sfVector2f){button_width, button_height});
+        sfRectangleShape_setPosition(*buttons[i], (sfVector2f){layer_panel_x + i * (button_width + button_spacing), button_y});
+        sfRectangleShape_setFillColor(*buttons[i], button_color);
+        sfRectangleShape_setOutlineColor(*buttons[i], button_outline);
+        sfRectangleShape_setOutlineThickness(*buttons[i], 1);
+
+        *labels[i] = sfText_create(font);
+        sfText_setString(*labels[i], button_labels[i]);
+        sfText_setCharacterSize(*labels[i], 12);
+        sfText_setFillColor(*labels[i], sfWhite);
+        sfText_setPosition(*labels[i], (sfVector2f){layer_panel_x + i * (button_width + button_spacing) + 8, button_y + 8});
+    }
+
     // Initialize file explorer
     ui->file_explorer = init_file_explorer(font, config);
     if (!ui->file_explorer) {
         printf("Warning: Failed to initialize file explorer\n");
     }
+
+    // Initialize color wheel
+    cJSON *color_wheel_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "color_wheel") : NULL;
+    int wheel_radius = config_get_int(color_wheel_cfg, "radius", 100);
+
+    // Create color wheel image procedurally
+    ui->color_wheel_image = sfImage_createFromColor((sfVector2u){wheel_radius * 2, wheel_radius * 2}, (sfColor){0, 0, 0, 0});
+
+    // Generate HSV color wheel
+    for (int y = 0; y < wheel_radius * 2; y++) {
+        for (int x = 0; x < wheel_radius * 2; x++) {
+            float dx = x - wheel_radius;
+            float dy = y - wheel_radius;
+            float distance = sqrtf(dx * dx + dy * dy);
+
+            if (distance <= wheel_radius) {
+                // Calculate hue from angle
+                float angle = atan2f(dy, dx);
+                float hue = (angle + M_PI) / (2.0f * M_PI); // Normalize to 0-1
+
+                // Calculate saturation from distance
+                float saturation = distance / wheel_radius;
+                float value = 1.0f; // Full brightness
+
+                // Convert HSV to RGB
+                float c = value * saturation;
+                float h_prime = hue * 6.0f;
+                float x_val = c * (1.0f - fabsf(fmodf(h_prime, 2.0f) - 1.0f));
+                float m = value - c;
+
+                float r, g, b;
+                if (h_prime < 1.0f) {
+                    r = c;
+                    g = x_val;
+                    b = 0;
+                } else if (h_prime < 2.0f) {
+                    r = x_val;
+                    g = c;
+                    b = 0;
+                } else if (h_prime < 3.0f) {
+                    r = 0;
+                    g = c;
+                    b = x_val;
+                } else if (h_prime < 4.0f) {
+                    r = 0;
+                    g = x_val;
+                    b = c;
+                } else if (h_prime < 5.0f) {
+                    r = x_val;
+                    g = 0;
+                    b = c;
+                } else {
+                    r = c;
+                    g = 0;
+                    b = x_val;
+                }
+
+                sfColor pixel = {(uint8_t)((r + m) * 255), (uint8_t)((g + m) * 255), (uint8_t)((b + m) * 255), 255};
+                sfImage_setPixel(ui->color_wheel_image, (sfVector2u){x, y}, pixel);
+            }
+        }
+    }
+
+    // Create texture and shape from image
+    ui->color_wheel_texture = sfTexture_createFromImage(ui->color_wheel_image, NULL);
+    ui->color_wheel = sfCircleShape_create();
+    sfCircleShape_setRadius(ui->color_wheel, wheel_radius);
+    sfCircleShape_setTexture(ui->color_wheel, ui->color_wheel_texture, 0);
+
+    // Create cursor for color wheel
+    ui->color_wheel_cursor = sfCircleShape_create();
+    sfCircleShape_setRadius(ui->color_wheel_cursor, 5);
+    sfCircleShape_setFillColor(ui->color_wheel_cursor, (sfColor){0, 0, 0, 0});
+    sfCircleShape_setOutlineColor(ui->color_wheel_cursor, sfWhite);
+    sfCircleShape_setOutlineThickness(ui->color_wheel_cursor, 2);
+    sfCircleShape_setOrigin(ui->color_wheel_cursor, (sfVector2f){5, 5});
 
     return ui;
 }

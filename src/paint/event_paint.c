@@ -23,15 +23,19 @@ void handle_drawing(paint_state_t *paint, sfVector2i mouse_pos) {
     }
 
     paint->last_pos = mouse_pos;
-    sfRenderTexture_display(paint->canvas);
 }
 
 void finish_shape(paint_state_t *paint) {
+    // Get current layer
+    if (paint->current_layer < 0 || paint->current_layer >= paint->layer_count)
+        return;
+    sfRenderTexture *target = paint->layers[paint->current_layer].texture;
+
     sfVector2i start = paint->shape_preview.start;
     sfVector2i end = paint->shape_preview.end;
 
     if (paint->current_tool == TOOL_LINE) {
-        draw_line(paint->canvas, start, end, paint->current_color, paint->brush_size);
+        draw_line(target, start, end, paint->current_color, paint->brush_size);
     } else if (paint->current_tool == TOOL_RECTANGLE) {
         // Draw rectangle outline
         int x1 = fmin(start.x, end.x);
@@ -39,10 +43,10 @@ void finish_shape(paint_state_t *paint) {
         int x2 = fmax(start.x, end.x);
         int y2 = fmax(start.y, end.y);
 
-        draw_line(paint->canvas, (sfVector2i){x1, y1}, (sfVector2i){x2, y1}, paint->current_color, paint->brush_size);
-        draw_line(paint->canvas, (sfVector2i){x2, y1}, (sfVector2i){x2, y2}, paint->current_color, paint->brush_size);
-        draw_line(paint->canvas, (sfVector2i){x2, y2}, (sfVector2i){x1, y2}, paint->current_color, paint->brush_size);
-        draw_line(paint->canvas, (sfVector2i){x1, y2}, (sfVector2i){x1, y1}, paint->current_color, paint->brush_size);
+        draw_line(target, (sfVector2i){x1, y1}, (sfVector2i){x2, y1}, paint->current_color, paint->brush_size);
+        draw_line(target, (sfVector2i){x2, y1}, (sfVector2i){x2, y2}, paint->current_color, paint->brush_size);
+        draw_line(target, (sfVector2i){x2, y2}, (sfVector2i){x1, y2}, paint->current_color, paint->brush_size);
+        draw_line(target, (sfVector2i){x1, y2}, (sfVector2i){x1, y1}, paint->current_color, paint->brush_size);
     } else if (paint->current_tool == TOOL_CIRCLE) {
         int dx = end.x - start.x;
         int dy = end.y - start.y;
@@ -51,9 +55,10 @@ void finish_shape(paint_state_t *paint) {
         // Draw circle using parametric equation
         for (float angle = 0; angle < 2 * M_PI; angle += 0.01f) {
             sfVector2i point = {start.x + radius * cos(angle), start.y + radius * sin(angle)};
-            draw_circle_point(paint->canvas, point, paint->current_color, paint->brush_size);
+            draw_circle_point(target, point, paint->current_color, paint->brush_size);
         }
     }
 
-    sfRenderTexture_display(paint->canvas);
+    sfRenderTexture_display(target);
+    composite_layers(paint);
 }

@@ -42,6 +42,43 @@ void handle_events(app_t *app) {
                         app->ui->file_explorer->scroll_offset = max_scroll;
                 }
             }
+            // Handle mouse wheel scrolling for layer panel
+            else if (app->active_tab == TAB_LAYER) {
+                sfVector2i mouse_pos = get_scaled_mouse_pos(app);
+
+                // Get layer panel configuration
+                ui_config_t *config = app->config;
+                cJSON *toolbar_cfg = config ? config_get_section(config, "toolbar") : NULL;
+                cJSON *layers_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "layers") : NULL;
+                int layer_panel_x = app->toolbar_x + config_get_int(layers_cfg, "panel_x", 15);
+                int layer_panel_y = config_get_int(layers_cfg, "panel_y", 115);
+                int layer_panel_width = config_get_int(layers_cfg, "panel_width", 270);
+                int layer_item_height = config_get_int(layers_cfg, "item_height", 50);
+                int layer_item_spacing = config_get_int(layers_cfg, "item_spacing", 5);
+                int max_visible = config_get_int(layers_cfg, "max_visible_items", 10);
+                int panel_height = max_visible * (layer_item_height + layer_item_spacing);
+
+                // Check if mouse is over layer panel
+                if (mouse_pos.x >= layer_panel_x && mouse_pos.x <= layer_panel_x + layer_panel_width && mouse_pos.y >= layer_panel_y && mouse_pos.y <= layer_panel_y + panel_height) {
+
+                    int max_scroll = app->paint->layer_count - max_visible;
+                    if (max_scroll < 0)
+                        max_scroll = 0;
+
+                    // Scroll up
+                    if (event.mouseWheelScroll.delta > 0) {
+                        app->ui->layer_panel_scroll_offset -= 1;
+                        if (app->ui->layer_panel_scroll_offset < 0)
+                            app->ui->layer_panel_scroll_offset = 0;
+                    }
+                    // Scroll down
+                    else if (event.mouseWheelScroll.delta < 0) {
+                        app->ui->layer_panel_scroll_offset += 1;
+                        if (app->ui->layer_panel_scroll_offset > max_scroll)
+                            app->ui->layer_panel_scroll_offset = max_scroll;
+                    }
+                }
+            }
         }
 
         if (event.type == sfEvtKeyPressed) {
@@ -154,8 +191,14 @@ void handle_events(app_t *app) {
                             app->paint->shape_preview.start = app->paint->last_pos;
                             app->paint->shape_preview.active = 1;
                         } else if (app->paint->current_tool == TOOL_FILL) {
-                            fill_canvas(app->paint, app->paint->last_pos,
-                                        get_pixel_color(app->paint->canvas, app->paint->last_pos.x, app->paint->last_pos.y, app->paint->canvas_width, app->paint->canvas_height));
+                            // Get pixel color from current layer
+                            if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
+                                const sfTexture *tex = sfRenderTexture_getTexture(app->paint->layers[app->paint->current_layer].texture);
+                                sfImage *img = sfTexture_copyToImage(tex);
+                                sfColor target = sfImage_getPixel(img, (sfVector2u){app->paint->last_pos.x, app->paint->last_pos.y});
+                                sfImage_destroy(img);
+                                fill_canvas(app->paint, app->paint->last_pos, target);
+                            }
                         } else {
                             draw_with_tool(app->paint, app->paint->last_pos);
                         }
@@ -181,6 +224,8 @@ void handle_events(app_t *app) {
             if (event.mouseButton.button == sfMouseLeft) {
                 app->paint->is_drawing = 0;
                 app->dragging_slider = -1;
+                app->ui->dragging_layer_opacity = -1;
+                app->dragging_layer_scrollbar = 0;
 
                 // Stop dragging scrollbar
                 if (app->ui->file_explorer && app->ui->file_explorer->dragging_scrollbar) {

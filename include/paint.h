@@ -23,6 +23,8 @@
 #define MAX_PATH_LENGTH 512
 #define MAX_FILENAME_LENGTH 256
 #define MAX_FILL_STACK 50000
+#define MAX_LAYERS 50
+#define MAX_LAYER_NAME 64
 
 typedef enum {
     TOOL_PEN,
@@ -43,6 +45,8 @@ typedef enum {
 
 typedef enum { SYMMETRY_NONE, SYMMETRY_HORIZONTAL, SYMMETRY_VERTICAL, SYMMETRY_BOTH, SYMMETRY_RADIAL_4, SYMMETRY_RADIAL_8 } symmetry_mode_t;
 
+typedef enum { TAB_PEN, TAB_COLOR, TAB_LAYER } toolbar_tab_t;
+
 typedef struct {
     sfVector2i start;
     sfVector2i end;
@@ -59,6 +63,14 @@ typedef struct {
     sfRenderTexture *texture;
     sfSprite *sprite;
 } undo_state_t;
+
+typedef struct {
+    char name[MAX_LAYER_NAME];
+    sfRenderTexture *texture;
+    sfSprite *sprite;
+    uint8_t opacity;
+    int visible;
+} layer_t;
 
 typedef struct {
     sfRenderTexture *canvas;
@@ -103,6 +115,11 @@ typedef struct {
 
     // Grid
     int show_grid;
+
+    // Layers
+    layer_t layers[MAX_LAYERS];
+    int layer_count;
+    int current_layer;
     int grid_size;
     int snap_to_grid;
 
@@ -187,6 +204,11 @@ typedef struct {
     sfText **labels;
     int button_count;
 
+    // Toolbar tabs
+    sfRectangleShape **tab_buttons;
+    sfText **tab_labels;
+    int tab_count;
+
     // Color picker
     sfRectangleShape *color_preview;
     sfRectangleShape *r_slider;
@@ -201,6 +223,12 @@ typedef struct {
     // Size slider
     sfRectangleShape *size_slider;
     sfRectangleShape *size_bar;
+
+    // Color wheel
+    sfCircleShape *color_wheel;
+    sfImage *color_wheel_image;
+    sfTexture *color_wheel_texture;
+    sfCircleShape *color_wheel_cursor;
 
     // Tool buttons
     sfCircleShape **tool_icons;
@@ -233,17 +261,43 @@ typedef struct {
 
     // File explorer overlay
     file_explorer_t *file_explorer;
+
+    // Layer panel
+    sfRectangleShape **layer_items;
+    sfText **layer_names;
+    sfRectangleShape **layer_visibility_buttons;
+    sfRectangleShape **layer_opacity_bars;
+    sfRectangleShape **layer_opacity_sliders;
+    int layer_panel_scroll_offset;
+    sfRectangleShape *layer_scrollbar;
+    sfRectangleShape *layer_scrollbar_thumb;
+
+    // Layer control buttons
+    sfRectangleShape *layer_new_button;
+    sfText *layer_new_label;
+    sfRectangleShape *layer_delete_button;
+    sfText *layer_delete_label;
+    sfRectangleShape *layer_merge_button;
+    sfText *layer_merge_label;
+    sfRectangleShape *layer_up_button;
+    sfText *layer_up_label;
+    sfRectangleShape *layer_down_button;
+    sfText *layer_down_label;
+
+    int dragging_layer_opacity;
 } ui_elements_t;
 
 typedef struct {
     sfRenderWindow *window;
     paint_state_t *paint;
     ui_elements_t *ui;
+    toolbar_tab_t active_tab;
     sfFont *font;
     ui_config_t *config;
     int dragging_slider;
     int dropdown_open;
     int options_dropdown_open;
+    int dragging_layer_scrollbar;
 
     // Dimensions loaded from config
     int window_width;
@@ -296,6 +350,18 @@ void update_color_slider(app_t *app, sfVector2i mouse_pos);
 void save_undo_state(paint_state_t *paint);
 void undo(paint_state_t *paint);
 void redo(paint_state_t *paint);
+
+// Layer functions
+void init_layers(paint_state_t *paint);
+void cleanup_layers(paint_state_t *paint);
+int create_layer(paint_state_t *paint, const char *name);
+void delete_layer(paint_state_t *paint, int layer_index);
+void move_layer_up(paint_state_t *paint, int layer_index);
+void move_layer_down(paint_state_t *paint, int layer_index);
+void merge_layer_down(paint_state_t *paint, int layer_index);
+void set_layer_opacity(paint_state_t *paint, int layer_index, uint8_t opacity);
+void toggle_layer_visibility(paint_state_t *paint, int layer_index);
+void composite_layers(paint_state_t *paint);
 
 // File operations
 void save_to_file(paint_state_t *paint, const char *filename);

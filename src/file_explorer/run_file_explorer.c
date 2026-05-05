@@ -108,6 +108,9 @@ void render_file_explorer(sfRenderWindow *window, file_explorer_t *explorer) {
             sfText_setPosition(explorer->cursor_indicator, (sfVector2f){cursor_pos.x, 678});
             sfRenderWindow_drawText(window, explorer->cursor_indicator, NULL);
         }
+
+        // Draw format button
+        sfRenderWindow_drawRectangleShape(window, explorer->format_button, NULL);
         sfRenderWindow_drawText(window, explorer->format_button_label, NULL);
 
         // Draw format dropdown if open

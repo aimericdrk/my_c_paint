@@ -11,6 +11,9 @@ void cleanup_paint_state(paint_state_t *paint) {
     if (!paint)
         return;
 
+    // Cleanup layers
+    cleanup_layers(paint);
+
     if (paint->canvas)
         sfRenderTexture_destroy(paint->canvas);
     if (paint->canvas_sprite)

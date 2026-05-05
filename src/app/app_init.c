@@ -62,6 +62,7 @@ app_t *init_app(void) {
     app->dragging_slider = -1;
     app->dropdown_open = 0;
     app->options_dropdown_open = 0;
+    app->active_tab = TAB_PEN;
 
     if (!app->paint || !app->ui) {
         cleanup_app(app);

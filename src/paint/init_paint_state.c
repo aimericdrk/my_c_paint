@@ -79,5 +79,8 @@ paint_state_t *init_paint_state(int canvas_width, int canvas_height, int canvas_
     paint->frame_count = 0;
     paint->fps = 0.0f;
 
+    // Initialize layers
+    init_layers(paint);
+
     return paint;
 }

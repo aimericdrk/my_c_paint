@@ -35,6 +35,49 @@ void update(app_t *app) {
         update_color_slider(app, mouse_pos);
     }
 
+    // Handle layer opacity dragging
+    if (app->ui->dragging_layer_opacity >= 0 && app->ui->dragging_layer_opacity < app->paint->layer_count) {
+        ui_config_t *config = app->config;
+        cJSON *toolbar_cfg = config ? config_get_section(config, "toolbar") : NULL;
+        cJSON *layers_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "layers") : NULL;
+        int layer_panel_x = app->toolbar_x + config_get_int(layers_cfg, "panel_x", 15);
+        int layer_panel_y = config_get_int(layers_cfg, "panel_y", 115);
+        int layer_item_height = config_get_int(layers_cfg, "item_height", 50);
+        int layer_item_spacing = config_get_int(layers_cfg, "item_spacing", 5);
+        int max_visible = config_get_int(layers_cfg, "max_visible_items", 10);
+
+        int visible_idx = app->ui->dragging_layer_opacity - app->ui->layer_panel_scroll_offset;
+        if (visible_idx >= 0 && visible_idx < max_visible) {
+            sfVector2f opacity_bar_pos = {layer_panel_x + 40, layer_panel_y + visible_idx * (layer_item_height + layer_item_spacing) + 30};
+            float percent = (mouse_pos.x - opacity_bar_pos.x) / 180.0f;
+            if (percent < 0)
+                percent = 0;
+            if (percent > 1)
+                percent = 1;
+            uint8_t opacity = (uint8_t)(percent * 255);
+            set_layer_opacity(app->paint, app->ui->dragging_layer_opacity, opacity);
+        }
+    }
+
+    // Handle layer scrollbar dragging
+    if (app->dragging_layer_scrollbar) {
+        ui_config_t *config = app->config;
+        cJSON *toolbar_cfg = config ? config_get_section(config, "toolbar") : NULL;
+        cJSON *layers_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "layers") : NULL;
+        int layer_panel_y = config_get_int(layers_cfg, "panel_y", 115);
+        int layer_item_height = config_get_int(layers_cfg, "item_height", 50);
+        int layer_item_spacing = config_get_int(layers_cfg, "item_spacing", 5);
+        int max_visible = config_get_int(layers_cfg, "max_visible_items", 10);
+        int scrollbar_height = max_visible * (layer_item_height + layer_item_spacing);
+
+        float percent = (mouse_pos.y - layer_panel_y) / (float)scrollbar_height;
+        app->ui->layer_panel_scroll_offset = (int)(percent * (app->paint->layer_count - max_visible));
+        if (app->ui->layer_panel_scroll_offset < 0)
+            app->ui->layer_panel_scroll_offset = 0;
+        if (app->ui->layer_panel_scroll_offset > app->paint->layer_count - max_visible)
+            app->ui->layer_panel_scroll_offset = app->paint->layer_count - max_visible;
+    }
+
     // Handle file explorer scrollbar dragging
     if (app->ui->file_explorer && app->ui->file_explorer->dragging_scrollbar) {
         file_explorer_t *explorer = app->ui->file_explorer;

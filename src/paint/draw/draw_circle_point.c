@@ -12,6 +12,18 @@ void draw_circle_point(sfRenderTexture *texture, sfVector2i pos, sfColor color, 
     sfCircleShape_setRadius(circle, size / 2.0f);
     sfCircleShape_setPosition(circle, (sfVector2f){pos.x - size / 2.0f, pos.y - size / 2.0f});
     sfCircleShape_setFillColor(circle, color);
-    sfRenderTexture_drawCircleShape(texture, circle, NULL);
+
+    // Use special blend mode for erasing (transparent color)
+    if (color.r == 0 && color.g == 0 && color.b == 0 && color.a == 0) {
+        sfRenderStates states;
+        states.blendMode = sfBlendNone;
+        states.transform = sfTransform_Identity;
+        states.texture = NULL;
+        states.shader = NULL;
+        sfRenderTexture_drawCircleShape(texture, circle, &states);
+    } else {
+        sfRenderTexture_drawCircleShape(texture, circle, NULL);
+    }
+
     sfCircleShape_destroy(circle);
 }

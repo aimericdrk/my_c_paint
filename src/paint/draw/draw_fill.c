@@ -86,14 +86,18 @@ void fill_canvas(paint_state_t *paint, sfVector2i pos, sfColor target) {
     if (colors_match(target, paint->current_color))
         return;
 
-    printf("Filling area...\n");
+    // Get current layer
+    if (paint->current_layer < 0 || paint->current_layer >= paint->layer_count)
+        return;
 
-    // Get the current canvas as an image
-    const sfTexture *texture = sfRenderTexture_getTexture(paint->canvas);
+    printf("Filling area on layer %d...\n", paint->current_layer);
+
+    // Get the current layer's texture as an image
+    const sfTexture *texture = sfRenderTexture_getTexture(paint->layers[paint->current_layer].texture);
     sfImage *image = sfTexture_copyToImage(texture);
 
     if (!image) {
-        printf("Failed to get canvas image!\n");
+        printf("Failed to get layer image!\n");
         return;
     }
 
@@ -104,18 +108,22 @@ void fill_canvas(paint_state_t *paint, sfVector2i pos, sfColor target) {
     if (stack_x && stack_y) {
         fill_canvas_optimized(paint, pos.x, pos.y, target, paint->current_color, image, stack_x, stack_y);
 
-        // Create a texture from the modified image and draw it to canvas
+        // Create a texture from the modified image and draw it to current layer
         sfTexture *new_texture = sfTexture_createFromImage(image, NULL);
         if (new_texture) {
             sfSprite *sprite = sfSprite_create(new_texture);
             if (sprite) {
-                sfRenderTexture_clear(paint->canvas, sfWhite);
-                sfRenderTexture_drawSprite(paint->canvas, sprite, NULL);
-                sfRenderTexture_display(paint->canvas);
+                // Clear current layer and redraw with filled content
+                sfRenderTexture_clear(paint->layers[paint->current_layer].texture, (sfColor){0, 0, 0, 0});
+                sfRenderTexture_drawSprite(paint->layers[paint->current_layer].texture, sprite, NULL);
+                sfRenderTexture_display(paint->layers[paint->current_layer].texture);
                 sfSprite_destroy(sprite);
             }
             sfTexture_destroy(new_texture);
         }
+
+        // Update composite display
+        composite_layers(paint);
 
         printf("Fill complete!\n");
     } else {

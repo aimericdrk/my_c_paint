@@ -8,8 +8,12 @@
 #include "paint.h"
 
 void clear_canvas(paint_state_t *paint) {
-    sfRenderTexture_clear(paint->canvas, sfWhite);
-    sfRenderTexture_display(paint->canvas);
+    // Clear current layer
+    if (paint->current_layer >= 0 && paint->current_layer < paint->layer_count) {
+        sfRenderTexture_clear(paint->layers[paint->current_layer].texture, (sfColor){0, 0, 0, 0});
+        sfRenderTexture_display(paint->layers[paint->current_layer].texture);
+        composite_layers(paint);
+    }
 }
 
 int colors_match(sfColor c1, sfColor c2) {

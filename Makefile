@@ -66,6 +66,7 @@ SRC         = src/main.c \
               src/paint/event_paint.c \
               src/paint/flip_canvas.c \
               src/paint/init_paint_state.c \
+			  src/paint/layers.c \
               src/paint/utils_paint.c \
 			  src/ui/destroy_ui.c \
               src/ui/display_ui.c \

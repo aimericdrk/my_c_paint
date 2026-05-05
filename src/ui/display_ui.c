@@ -14,137 +14,279 @@ void render_ui(sfRenderWindow *window, app_t *app) {
     // Draw background
     sfRenderWindow_drawRectangleShape(window, ui->bg, NULL);
 
-    // Draw tool buttons
-    for (int i = 0; i < ui->button_count; i++) {
-        // Highlight selected tool
-        if (i == (int)paint->current_tool) {
-            sfRectangleShape_setFillColor(ui->buttons[i], (sfColor){100, 150, 200, 255});
-        } else {
-            sfRectangleShape_setFillColor(ui->buttons[i], (sfColor){70, 70, 75, 255});
-        }
-
-        sfRenderWindow_drawRectangleShape(window, ui->buttons[i], NULL);
-        sfRenderWindow_drawCircleShape(window, ui->tool_icons[i], NULL);
-        sfRenderWindow_drawText(window, ui->labels[i], NULL);
-    }
-
-    // Draw color preview
-    sfRectangleShape_setFillColor(ui->color_preview, paint->current_color);
-    sfRenderWindow_drawRectangleShape(window, ui->color_preview, NULL);
-
-    // Draw color sliders
-    sfRenderWindow_drawRectangleShape(window, ui->r_bar, NULL);
-    sfRenderWindow_drawRectangleShape(window, ui->g_bar, NULL);
-    sfRenderWindow_drawRectangleShape(window, ui->b_bar, NULL);
-    sfRenderWindow_drawRectangleShape(window, ui->a_bar, NULL);
-
-    // Update slider positions based on color - get config sections
+    // Get tab configuration
     ui_config_t *config = app->config;
     cJSON *toolbar_cfg = config ? config_get_section(config, "toolbar") : NULL;
-    cJSON *sliders_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "sliders") : NULL;
-    cJSON *r_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "r_slider") : NULL;
-    cJSON *g_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "g_slider") : NULL;
-    cJSON *b_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "b_slider") : NULL;
-    cJSON *a_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "a_slider") : NULL;
-    cJSON *size_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "size_slider") : NULL;
+    cJSON *tabs_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "tabs") : NULL;
+    sfColor tab_btn_color = config_get_color(tabs_cfg, "button_color", (sfColor){60, 60, 65, 255});
+    sfColor tab_btn_selected = config_get_color(tabs_cfg, "button_selected_color", (sfColor){100, 150, 200, 255});
 
-    int slider_base_x = app->toolbar_x + config_get_int(sliders_cfg, "x", 25);
-    int slider_range = config_get_int(sliders_cfg, "slider_range", 190);
-    int r_slider_y = config_get_int(r_slider_cfg, "y", 520);
-    int g_slider_y = config_get_int(g_slider_cfg, "y", 570);
-    int b_slider_y = config_get_int(b_slider_cfg, "y", 620);
-    int a_slider_y = config_get_int(a_slider_cfg, "y", 670);
-    int size_slider_y = config_get_int(size_slider_cfg, "y", 685);
-    int handle_y_offset = config_get_int(r_slider_cfg, "handle_y_offset", -5);
+    // Draw tab buttons
+    for (int i = 0; i < ui->tab_count; i++) {
+        // Highlight selected tab
+        if (i == (int)app->active_tab) {
+            sfRectangleShape_setFillColor(ui->tab_buttons[i], tab_btn_selected);
+        } else {
+            sfRectangleShape_setFillColor(ui->tab_buttons[i], tab_btn_color);
+        }
 
-    sfRectangleShape_setPosition(ui->r_slider, (sfVector2f){slider_base_x + (paint->current_color.r / 255.0f) * slider_range, r_slider_y + handle_y_offset});
-    sfRectangleShape_setPosition(ui->g_slider, (sfVector2f){slider_base_x + (paint->current_color.g / 255.0f) * slider_range, g_slider_y + handle_y_offset});
-    sfRectangleShape_setPosition(ui->b_slider, (sfVector2f){slider_base_x + (paint->current_color.b / 255.0f) * slider_range, b_slider_y + handle_y_offset});
-    sfRectangleShape_setPosition(ui->a_slider, (sfVector2f){slider_base_x + (paint->current_color.a / 255.0f) * slider_range, a_slider_y + handle_y_offset});
+        sfRenderWindow_drawRectangleShape(window, ui->tab_buttons[i], NULL);
+        sfRenderWindow_drawText(window, ui->tab_labels[i], NULL);
+    }
 
-    sfRenderWindow_drawRectangleShape(window, ui->r_slider, NULL);
-    sfRenderWindow_drawRectangleShape(window, ui->g_slider, NULL);
-    sfRenderWindow_drawRectangleShape(window, ui->b_slider, NULL);
-    sfRenderWindow_drawRectangleShape(window, ui->a_slider, NULL);
+    // Draw content based on active tab
+    if (app->active_tab == TAB_PEN) {
+        // Draw tool buttons
+        for (int i = 0; i < ui->button_count; i++) {
+            // Highlight selected tool
+            if (i == (int)paint->current_tool) {
+                sfRectangleShape_setFillColor(ui->buttons[i], (sfColor){100, 150, 200, 255});
+            } else {
+                sfRectangleShape_setFillColor(ui->buttons[i], (sfColor){70, 70, 75, 255});
+            }
 
-    // Draw size slider
-    sfRenderWindow_drawRectangleShape(window, ui->size_bar, NULL);
+            sfRenderWindow_drawRectangleShape(window, ui->buttons[i], NULL);
+            sfRenderWindow_drawCircleShape(window, ui->tool_icons[i], NULL);
+            sfRenderWindow_drawText(window, ui->labels[i], NULL);
+        }
+    } else if (app->active_tab == TAB_COLOR) {
+        // Draw color preview
+        sfRectangleShape_setFillColor(ui->color_preview, paint->current_color);
+        sfRenderWindow_drawRectangleShape(window, ui->color_preview, NULL);
 
-    // Update size slider position
-    int size_min = config_get_int(size_slider_cfg, "min", 1);
-    int size_max = config_get_int(size_slider_cfg, "max", 50);
-    float size_percent = (paint->brush_size - size_min) / (float)(size_max - size_min);
-    sfRectangleShape_setPosition(ui->size_slider, (sfVector2f){slider_base_x + size_percent * slider_range, size_slider_y + handle_y_offset});
-    sfRenderWindow_drawRectangleShape(window, ui->size_slider, NULL);
+        // Draw color sliders
+        sfRenderWindow_drawRectangleShape(window, ui->r_bar, NULL);
+        sfRenderWindow_drawRectangleShape(window, ui->g_bar, NULL);
+        sfRenderWindow_drawRectangleShape(window, ui->b_bar, NULL);
+        sfRenderWindow_drawRectangleShape(window, ui->a_bar, NULL);
 
-    // Draw labels from config
-    cJSON *color_preview_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "color_preview") : NULL;
+        // Update slider positions based on color - get config sections
+        cJSON *sliders_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "sliders") : NULL;
+        cJSON *r_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "r_slider") : NULL;
+        cJSON *g_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "g_slider") : NULL;
+        cJSON *b_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "b_slider") : NULL;
+        cJSON *a_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "a_slider") : NULL;
+        cJSON *size_slider_cfg = sliders_cfg ? cJSON_GetObjectItem(sliders_cfg, "size_slider") : NULL;
 
-    sfText *text = sfText_create(ui->font);
-    int label_font_size = config_get_int(color_preview_cfg, "label_font_size", 16);
-    sfText_setCharacterSize(text, label_font_size);
-    sfText_setFillColor(text, sfWhite);
+        int slider_base_x = app->toolbar_x + config_get_int(sliders_cfg, "x", 25);
+        int slider_range = config_get_int(sliders_cfg, "slider_range", 190);
+        int r_slider_y = config_get_int(r_slider_cfg, "y", 185);
+        int g_slider_y = config_get_int(g_slider_cfg, "y", 235);
+        int b_slider_y = config_get_int(b_slider_cfg, "y", 285);
+        int a_slider_y = config_get_int(a_slider_cfg, "y", 335);
+        int size_slider_y = config_get_int(size_slider_cfg, "y", 420);
+        int handle_y_offset = config_get_int(r_slider_cfg, "handle_y_offset", -5);
 
-    // Color label
-    const char *color_label = config_get_string(color_preview_cfg, "label_text", "Color:");
-    int color_label_x = config_get_int(color_preview_cfg, "label_x", 15);
-    int color_label_y = config_get_int(color_preview_cfg, "label_y", 535);
-    sfText_setString(text, color_label);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + color_label_x, color_label_y});
-    sfRenderWindow_drawText(window, text, NULL);
+        sfRectangleShape_setPosition(ui->r_slider, (sfVector2f){slider_base_x + (paint->current_color.r / 255.0f) * slider_range, r_slider_y + handle_y_offset});
+        sfRectangleShape_setPosition(ui->g_slider, (sfVector2f){slider_base_x + (paint->current_color.g / 255.0f) * slider_range, g_slider_y + handle_y_offset});
+        sfRectangleShape_setPosition(ui->b_slider, (sfVector2f){slider_base_x + (paint->current_color.b / 255.0f) * slider_range, b_slider_y + handle_y_offset});
+        sfRectangleShape_setPosition(ui->a_slider, (sfVector2f){slider_base_x + (paint->current_color.a / 255.0f) * slider_range, a_slider_y + handle_y_offset});
 
-    // R label
-    const char *r_label = config_get_string(r_slider_cfg, "label", "R");
-    int r_label_x = config_get_int(r_slider_cfg, "label_x", 230);
-    int r_label_y = config_get_int(r_slider_cfg, "label_y", 640);
-    sfText_setString(text, r_label);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + r_label_x, r_label_y});
-    sfRenderWindow_drawText(window, text, NULL);
+        sfRenderWindow_drawRectangleShape(window, ui->r_slider, NULL);
+        sfRenderWindow_drawRectangleShape(window, ui->g_slider, NULL);
+        sfRenderWindow_drawRectangleShape(window, ui->b_slider, NULL);
+        sfRenderWindow_drawRectangleShape(window, ui->a_slider, NULL);
 
-    // G label
-    const char *g_label = config_get_string(g_slider_cfg, "label", "G");
-    int g_label_x = config_get_int(g_slider_cfg, "label_x", 230);
-    int g_label_y = config_get_int(g_slider_cfg, "label_y", 690);
-    sfText_setString(text, g_label);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + g_label_x, g_label_y});
-    sfRenderWindow_drawText(window, text, NULL);
+        // Draw size slider
+        sfRenderWindow_drawRectangleShape(window, ui->size_bar, NULL);
 
-    // B label
-    const char *b_label = config_get_string(b_slider_cfg, "label", "B");
-    int b_label_x = config_get_int(b_slider_cfg, "label_x", 230);
-    int b_label_y = config_get_int(b_slider_cfg, "label_y", 740);
-    sfText_setString(text, b_label);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + b_label_x, b_label_y});
-    sfRenderWindow_drawText(window, text, NULL);
+        // Update size slider position
+        int size_min = config_get_int(size_slider_cfg, "min", 1);
+        int size_max = config_get_int(size_slider_cfg, "max", 50);
+        float size_percent = (paint->brush_size - size_min) / (float)(size_max - size_min);
+        sfRectangleShape_setPosition(ui->size_slider, (sfVector2f){slider_base_x + size_percent * slider_range, size_slider_y + handle_y_offset});
+        sfRenderWindow_drawRectangleShape(window, ui->size_slider, NULL);
 
-    // A label
-    const char *a_label = config_get_string(a_slider_cfg, "label", "A");
-    int a_label_x = config_get_int(a_slider_cfg, "label_x", 230);
-    int a_label_y = config_get_int(a_slider_cfg, "label_y", 670);
-    sfText_setString(text, a_label);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + a_label_x, a_label_y});
-    sfRenderWindow_drawText(window, text, NULL);
+        // Draw labels from config
+        cJSON *color_preview_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "color_preview") : NULL;
 
-    // Size label
-    const char *size_label = config_get_string(size_slider_cfg, "label", "Size:");
-    int size_label_x = config_get_int(size_slider_cfg, "label_x", 15);
-    int size_label_y = config_get_int(size_slider_cfg, "label_y", 770);
-    sfText_setString(text, size_label);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + size_label_x, size_label_y});
-    sfRenderWindow_drawText(window, text, NULL);
+        sfText *text = sfText_create(ui->font);
+        int label_font_size = config_get_int(color_preview_cfg, "label_font_size", 16);
+        sfText_setCharacterSize(text, label_font_size);
+        sfText_setFillColor(text, sfWhite);
 
-    // Size value label
-    char size_str[32];
-    sprintf(size_str, "%d px", paint->brush_size);
-    int size_value_x = config_get_int(size_slider_cfg, "value_label_x", 230);
-    int size_value_y = config_get_int(size_slider_cfg, "value_label_y", 810);
-    sfText_setString(text, size_str);
-    sfText_setPosition(text, (sfVector2f){app->toolbar_x + size_value_x, size_value_y});
-    sfRenderWindow_drawText(window, text, NULL);
+        // Color label
+        const char *color_label = config_get_string(color_preview_cfg, "label_text", "Color:");
+        int color_label_x = config_get_int(color_preview_cfg, "label_x", 15);
+        int color_label_y = config_get_int(color_preview_cfg, "label_y", 115);
+        sfText_setString(text, color_label);
+        sfText_setPosition(text, (sfVector2f){app->toolbar_x + color_label_x, color_label_y});
+        sfRenderWindow_drawText(window, text, NULL);
 
-    sfText_destroy(text);
+        // R label
+        const char *r_label = config_get_string(r_slider_cfg, "label", "R");
+        int r_label_x = config_get_int(r_slider_cfg, "label_x", 230);
+        int r_label_y = config_get_int(r_slider_cfg, "label_y", 185);
+        sfText_setString(text, r_label);
+        sfText_setPosition(text, (sfVector2f){app->toolbar_x + r_label_x, r_label_y});
+        sfRenderWindow_drawText(window, text, NULL);
 
-    // Draw top bar
+        // G label
+        const char *g_label = config_get_string(g_slider_cfg, "label", "G");
+        int g_label_x = config_get_int(g_slider_cfg, "label_x", 230);
+        int g_label_y = config_get_int(g_slider_cfg, "label_y", 235);
+        sfText_setString(text, g_label);
+        sfText_setPosition(text, (sfVector2f){app->toolbar_x + g_label_x, g_label_y});
+        sfRenderWindow_drawText(window, text, NULL);
+
+        // B label
+        const char *b_label = config_get_string(b_slider_cfg, "label", "B");
+        int b_label_x = config_get_int(b_slider_cfg, "label_x", 230);
+        int b_label_y = config_get_int(b_slider_cfg, "label_y", 285);
+        sfText_setString(text, b_label);
+        sfText_setPosition(text, (sfVector2f){app->toolbar_x + b_label_x, b_label_y});
+        sfRenderWindow_drawText(window, text, NULL);
+
+        // A label
+        const char *a_label = config_get_string(a_slider_cfg, "label", "A");
+        int a_label_x = config_get_int(a_slider_cfg, "label_x", 230);
+        int a_label_y = config_get_int(a_slider_cfg, "label_y", 335);
+        sfText_setString(text, a_label);
+        sfText_setPosition(text, (sfVector2f){app->toolbar_x + a_label_x, a_label_y});
+        sfRenderWindow_drawText(window, text, NULL);
+
+        // Size label
+        const char *size_label = config_get_string(size_slider_cfg, "label", "Size:");
+        int size_label_x = config_get_int(size_slider_cfg, "label_x", 15);
+        int size_label_y = config_get_int(size_slider_cfg, "label_y", 390);
+        sfText_setString(text, size_label);
+        sfText_setPosition(text, (sfVector2f){app->toolbar_x + size_label_x, size_label_y});
+        sfRenderWindow_drawText(window, text, NULL);
+
+        // Size value label
+        char size_str[32];
+        sprintf(size_str, "%d px", paint->brush_size);
+        int size_value_x = config_get_int(size_slider_cfg, "value_label_x", 70);
+        int size_value_y = config_get_int(size_slider_cfg, "value_label_y", 390);
+        sfText_setString(text, size_str);
+        sfText_setPosition(text, (sfVector2f){app->toolbar_x + size_value_x, size_value_y});
+        sfRenderWindow_drawText(window, text, NULL);
+
+        // Draw color wheel
+        cJSON *color_wheel_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "color_wheel") : NULL;
+        int wheel_x = config_get_int(color_wheel_cfg, "x", 75);
+        int wheel_y = config_get_int(color_wheel_cfg, "y", 520);
+
+        sfCircleShape_setPosition(ui->color_wheel, (sfVector2f){app->toolbar_x + wheel_x, wheel_y});
+        sfRenderWindow_drawCircleShape(window, ui->color_wheel, NULL);
+
+        // Draw color wheel cursor (optional - shows current color position)
+        // Note: This would require calculating the HSV position from current RGB color
+        // For now, we'll skip it or implement a simple version
+
+        sfText_destroy(text);
+    } else if (app->active_tab == TAB_LAYER) {
+        // Draw layer panel
+        cJSON *layers_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "layers") : NULL;
+        int layer_panel_x = app->toolbar_x + config_get_int(layers_cfg, "panel_x", 15);
+        int layer_panel_y = config_get_int(layers_cfg, "panel_y", 115);
+        int layer_item_height = config_get_int(layers_cfg, "item_height", 50);
+        int layer_item_spacing = config_get_int(layers_cfg, "item_spacing", 5);
+        int max_visible = config_get_int(layers_cfg, "max_visible_items", 10);
+        sfColor selected_color = config_get_color(layers_cfg, "item_selected_color", (sfColor){100, 150, 200, 255});
+        sfColor item_color = config_get_color(layers_cfg, "item_color", (sfColor){60, 60, 65, 255});
+
+        int visible_count = paint->layer_count < max_visible ? paint->layer_count : max_visible;
+
+        // Draw visible layers
+        for (int i = 0; i < visible_count; i++) {
+            int layer_idx = i + ui->layer_panel_scroll_offset;
+            if (layer_idx >= paint->layer_count)
+                break;
+
+            layer_t *layer = &paint->layers[layer_idx];
+
+            // Update position
+            sfRectangleShape_setPosition(ui->layer_items[i], (sfVector2f){layer_panel_x, layer_panel_y + i * (layer_item_height + layer_item_spacing)});
+
+            // Highlight selected layer
+            if (layer_idx == paint->current_layer) {
+                sfRectangleShape_setFillColor(ui->layer_items[i], selected_color);
+            } else {
+                sfRectangleShape_setFillColor(ui->layer_items[i], item_color);
+            }
+
+            // Draw layer item
+            sfRenderWindow_drawRectangleShape(window, ui->layer_items[i], NULL);
+
+            // Draw layer name
+            sfText_setString(ui->layer_names[i], layer->name);
+            sfText_setPosition(ui->layer_names[i], (sfVector2f){layer_panel_x + 40, layer_panel_y + i * (layer_item_height + layer_item_spacing) + 5});
+            sfRenderWindow_drawText(window, ui->layer_names[i], NULL);
+
+            // Draw visibility button
+            sfVector2f vis_pos = {layer_panel_x + 10, layer_panel_y + i * (layer_item_height + layer_item_spacing) + 5};
+            sfRectangleShape_setPosition(ui->layer_visibility_buttons[i], vis_pos);
+            if (layer->visible) {
+                sfRectangleShape_setFillColor(ui->layer_visibility_buttons[i], (sfColor){100, 200, 100, 255});
+            } else {
+                sfRectangleShape_setFillColor(ui->layer_visibility_buttons[i], (sfColor){200, 100, 100, 255});
+            }
+            sfRenderWindow_drawRectangleShape(window, ui->layer_visibility_buttons[i], NULL);
+
+            // Draw opacity bar and slider
+            sfVector2f opacity_bar_pos = {layer_panel_x + 40, layer_panel_y + i * (layer_item_height + layer_item_spacing) + 30};
+            sfRectangleShape_setPosition(ui->layer_opacity_bars[i], opacity_bar_pos);
+            sfRenderWindow_drawRectangleShape(window, ui->layer_opacity_bars[i], NULL);
+
+            // Position opacity slider
+            float opacity_percent = layer->opacity / 255.0f;
+            sfVector2f slider_pos = {opacity_bar_pos.x + opacity_percent * 172, opacity_bar_pos.y - 2};
+            sfRectangleShape_setPosition(ui->layer_opacity_sliders[i], slider_pos);
+            sfRenderWindow_drawRectangleShape(window, ui->layer_opacity_sliders[i], NULL);
+
+            // Draw opacity value
+            char opacity_str[16];
+            snprintf(opacity_str, sizeof(opacity_str), "%d%%", (int)(opacity_percent * 100));
+            sfText *opacity_text = sfText_create(ui->font);
+            sfText_setString(opacity_text, opacity_str);
+            sfText_setCharacterSize(opacity_text, 10);
+            sfText_setFillColor(opacity_text, sfWhite);
+            sfText_setPosition(opacity_text, (sfVector2f){layer_panel_x + 225, opacity_bar_pos.y - 2});
+            sfRenderWindow_drawText(window, opacity_text, NULL);
+            sfText_destroy(opacity_text);
+        }
+
+        // Draw scrollbar if needed
+        if (paint->layer_count > max_visible) {
+            int scrollbar_x = layer_panel_x + 275;
+            int scrollbar_height = max_visible * (layer_item_height + layer_item_spacing);
+            sfRectangleShape_setSize(ui->layer_scrollbar, (sfVector2f){10, scrollbar_height});
+            sfRectangleShape_setPosition(ui->layer_scrollbar, (sfVector2f){scrollbar_x, layer_panel_y});
+            sfRenderWindow_drawRectangleShape(window, ui->layer_scrollbar, NULL);
+
+            // Calculate thumb size and position
+            float thumb_height = (float)max_visible / paint->layer_count * scrollbar_height;
+            float thumb_y = layer_panel_y + ((float)ui->layer_panel_scroll_offset / paint->layer_count * scrollbar_height);
+            sfRectangleShape_setSize(ui->layer_scrollbar_thumb, (sfVector2f){10, thumb_height});
+            sfRectangleShape_setPosition(ui->layer_scrollbar_thumb, (sfVector2f){scrollbar_x, thumb_y});
+            sfRenderWindow_drawRectangleShape(window, ui->layer_scrollbar_thumb, NULL);
+        }
+
+        // Draw control buttons
+        sfVector2i mouse_pos = sfMouse_getPositionRenderWindow(window);
+        sfColor button_hover = config_get_color(layers_cfg, "button_hover_color", (sfColor){100, 150, 200, 255});
+        sfColor button_normal = config_get_color(layers_cfg, "button_color", (sfColor){70, 70, 75, 255});
+
+        sfRectangleShape **buttons[] = {&ui->layer_new_button, &ui->layer_delete_button, &ui->layer_merge_button, &ui->layer_up_button, &ui->layer_down_button};
+        sfText **labels[] = {&ui->layer_new_label, &ui->layer_delete_label, &ui->layer_merge_label, &ui->layer_up_label, &ui->layer_down_label};
+
+        for (int i = 0; i < 5; i++) {
+            sfVector2f btn_pos = sfRectangleShape_getPosition(*buttons[i]);
+            sfVector2f btn_size = sfRectangleShape_getSize(*buttons[i]);
+
+            if (is_point_in_rect(mouse_pos, btn_pos, btn_size)) {
+                sfRectangleShape_setFillColor(*buttons[i], button_hover);
+            } else {
+                sfRectangleShape_setFillColor(*buttons[i], button_normal);
+            }
+
+            sfRenderWindow_drawRectangleShape(window, *buttons[i], NULL);
+            sfRenderWindow_drawText(window, *labels[i], NULL);
+        }
+    }
+
+    // Draw top bar (always visible)
     sfRenderWindow_drawRectangleShape(window, ui->topbar, NULL);
     sfRenderWindow_drawRectangleShape(window, ui->file_button, NULL);
     sfRenderWindow_drawText(window, ui->file_label, NULL);

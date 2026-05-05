@@ -6,7 +6,7 @@
         "framerate": 60
     },
     "canvas": {
-        "width": 1130,
+        "width": 1050,
         "height": 750,
         "x": 10,
         "y": 60,
@@ -75,17 +75,51 @@
         }
     },
     "toolbar": {
-        "x": 1150,
+        "x": 1100,
         "y": 0,
-        "width": 250,
+        "width": 300,
         "background_color": [
             50,
             50,
             55,
             255
         ],
-        "tools": {
+        "tabs": {
             "start_y": 60,
+            "button_width": 60,
+            "button_height": 40,
+            "spacing": 5,
+            "offset_x": 5,
+            "button_color": [
+                60,
+                60,
+                65,
+                255
+            ],
+            "button_selected_color": [
+                100,
+                150,
+                200,
+                255
+            ],
+            "outline_color": [
+                80,
+                80,
+                85,
+                255
+            ],
+            "outline_thickness": 2,
+            "font_size": 18,
+            "text_offset_x": 10,
+            "text_offset_y": 8,
+            "tabs_list": [
+                "Pen",
+                "Color",
+                "Layer"
+            ]
+        },
+        "tools": {
+            "start_y": 115,
             "button_width": 220,
             "button_height": 40,
             "spacing": 45,
@@ -134,7 +168,7 @@
         },
         "color_preview": {
             "x": 25,
-            "y": 455,
+            "y": 145,
             "width": 200,
             "height": 50,
             "outline_color": [
@@ -146,8 +180,14 @@
             "outline_thickness": 3,
             "label_text": "Color:",
             "label_x": 15,
-            "label_y": 425,
+            "label_y": 115,
             "label_font_size": 16
+        },
+        "color_wheel": {
+            "x": 50,
+            "y": 530,
+            "radius": 100,
+            "brightness": 1.0
         },
         "sliders": {
             "width": 200,
@@ -157,7 +197,7 @@
             "x": 25,
             "slider_range": 190,
             "r_slider": {
-                "y": 520,
+                "y": 235,
                 "handle_y_offset": -5,
                 "color": [
                     255,
@@ -167,10 +207,10 @@
                 ],
                 "label": "R",
                 "label_x": 230,
-                "label_y": 520
+                "label_y": 235
             },
             "g_slider": {
-                "y": 570,
+                "y": 285,
                 "handle_y_offset": -5,
                 "color": [
                     100,
@@ -180,10 +220,10 @@
                 ],
                 "label": "G",
                 "label_x": 230,
-                "label_y": 570
+                "label_y": 285
             },
             "b_slider": {
-                "y": 620,
+                "y": 335,
                 "handle_y_offset": -5,
                 "color": [
                     100,
@@ -193,10 +233,10 @@
                 ],
                 "label": "B",
                 "label_x": 230,
-                "label_y": 620
+                "label_y": 335
             },
             "a_slider": {
-                "y": 670,
+                "y": 385,
                 "handle_y_offset": -5,
                 "color": [
                     100,
@@ -206,10 +246,10 @@
                 ],
                 "label": "A",
                 "label_x": 230,
-                "label_y": 670
+                "label_y": 385
             },
             "size_slider": {
-                "y": 760,
+                "y": 480,
                 "handle_y_offset": -5,
                 "color": [
                     150,
@@ -219,9 +259,9 @@
                 ],
                 "label": "Size:",
                 "label_x": 15,
-                "label_y": 725,
+                "label_y": 440,
                 "value_label_x": 70,
-                "value_label_y": 726,
+                "value_label_y": 440,
                 "min": 1,
                 "max": 50
             },
@@ -238,6 +278,83 @@
                 255
             ],
             "handle_outline_thickness": 2
+        },
+        "layers": {
+            "panel_x": 15,
+            "panel_y": 115,
+            "panel_width": 270,
+            "item_height": 50,
+            "item_spacing": 5,
+            "max_visible_items": 10,
+            "item_color": [
+                60,
+                60,
+                65,
+                255
+            ],
+            "item_selected_color": [
+                100,
+                150,
+                200,
+                255
+            ],
+            "item_outline_color": [
+                80,
+                80,
+                85,
+                255
+            ],
+            "item_outline_thickness": 1,
+            "name_offset_x": 40,
+            "name_offset_y": 15,
+            "name_font_size": 14,
+            "visibility_button_x": 10,
+            "visibility_button_y": 15,
+            "visibility_button_size": 20,
+            "opacity_bar_x": 40,
+            "opacity_bar_y": 30,
+            "opacity_bar_width": 180,
+            "opacity_bar_height": 10,
+            "opacity_slider_width": 8,
+            "opacity_slider_height": 14,
+            "scrollbar_width": 10,
+            "scrollbar_x_offset": 275,
+            "scrollbar_color": [
+                70,
+                70,
+                75,
+                255
+            ],
+            "scrollbar_thumb_color": [
+                120,
+                120,
+                125,
+                255
+            ],
+            "button_width": 55,
+            "button_height": 30,
+            "button_spacing": 5,
+            "button_y": 680,
+            "button_color": [
+                70,
+                70,
+                75,
+                255
+            ],
+            "button_hover_color": [
+                100,
+                150,
+                200,
+                255
+            ],
+            "button_font_size": 12,
+            "button_labels": [
+                "New",
+                "Del",
+                "Merge",
+                "Up",
+                "Down"
+            ]
         }
     },
     "dropdowns": {

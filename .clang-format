@@ -1,0 +1,18 @@
+---
+# ClangFormat configuration for C_paint project
+BasedOnStyle: LLVM
+
+# Keep opening braces on the same line
+BreakBeforeBraces: Attach
+
+# Other useful C formatting settings
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 200
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+PointerAlignment: Right
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false

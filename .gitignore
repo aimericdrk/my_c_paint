@@ -1,0 +1,46 @@
+# Compiled Object files
+*.o
+*.obj
+
+# Compiled Binary
+my_paint
+
+# Object directory
+obj/
+
+# Build artifacts
+*.a
+*.so
+*.dylib
+*.dll
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Output files
+output.png
+*.png.bak
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Backup files
+*~
+*.bak
+*.tmp
+
+# Core dumps
+core
+core.*
+
+# Valgrind output
+vgcore.*
+*.log

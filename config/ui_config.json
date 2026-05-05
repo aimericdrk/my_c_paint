@@ -1,0 +1,416 @@
+{
+    "window": {
+        "width": 1400,
+        "height": 920,
+        "title": "my Paint",
+        "framerate": 60
+    },
+    "canvas": {
+        "width": 1000,
+        "height": 700,
+        "x": 50,
+        "y": 90,
+        "background_color": [
+            255,
+            255,
+            255,
+            255
+        ]
+    },
+    "topbar": {
+        "height": 40,
+        "color": [
+            35,
+            35,
+            40,
+            255
+        ],
+        "buttons": {
+            "file": {
+                "x": 10,
+                "y": 5,
+                "width": 80,
+                "height": 30,
+                "text": "File",
+                "font_size": 18,
+                "text_offset_x": 18,
+                "text_offset_y": 5,
+                "color": [
+                    50,
+                    50,
+                    55,
+                    255
+                ],
+                "outline_color": [
+                    80,
+                    80,
+                    85,
+                    255
+                ],
+                "outline_thickness": 1
+            },
+            "options": {
+                "x": 100,
+                "y": 5,
+                "width": 100,
+                "height": 30,
+                "text": "Options",
+                "font_size": 18,
+                "text_offset_x": 13,
+                "text_offset_y": 5,
+                "color": [
+                    50,
+                    50,
+                    55,
+                    255
+                ],
+                "outline_color": [
+                    80,
+                    80,
+                    85,
+                    255
+                ],
+                "outline_thickness": 1
+            }
+        }
+    },
+    "toolbar": {
+        "x": 1150,
+        "y": 0,
+        "width": 250,
+        "background_color": [
+            50,
+            50,
+            55,
+            255
+        ],
+        "tools": {
+            "start_y": 60,
+            "button_width": 220,
+            "button_height": 40,
+            "spacing": 45,
+            "offset_x": 15,
+            "button_color": [
+                70,
+                70,
+                75,
+                255
+            ],
+            "button_selected_color": [
+                100,
+                150,
+                200,
+                255
+            ],
+            "outline_color": [
+                100,
+                100,
+                105,
+                255
+            ],
+            "outline_thickness": 1,
+            "font_size": 18,
+            "text_offset_x": 45,
+            "text_offset_y": 5,
+            "icon_radius": 6,
+            "icon_offset_x": 15,
+            "icon_offset_y": 5,
+            "icon_color": [
+                200,
+                200,
+                205,
+                255
+            ],
+            "tools_list": [
+                "Pen",
+                "Eraser",
+                "Brush",
+                "Spray",
+                "Line",
+                "Rectangle",
+                "Circle",
+                "Fill"
+            ]
+        },
+        "color_preview": {
+            "x": 25,
+            "y": 565,
+            "width": 200,
+            "height": 50,
+            "outline_color": [
+                255,
+                255,
+                255,
+                255
+            ],
+            "outline_thickness": 3,
+            "label_text": "Color:",
+            "label_y": 535,
+            "label_font_size": 16
+        },
+        "sliders": {
+            "width": 200,
+            "height": 20,
+            "handle_width": 10,
+            "handle_height": 30,
+            "x": 25,
+            "r_slider": {
+                "y": 640,
+                "color": [
+                    255,
+                    100,
+                    100,
+                    255
+                ],
+                "label": "R",
+                "label_offset_x": 205,
+                "label_offset_y": 0
+            },
+            "g_slider": {
+                "y": 690,
+                "color": [
+                    100,
+                    255,
+                    100,
+                    255
+                ],
+                "label": "G",
+                "label_offset_x": 205,
+                "label_offset_y": 0
+            },
+            "b_slider": {
+                "y": 740,
+                "color": [
+                    100,
+                    100,
+                    255,
+                    255
+                ],
+                "label": "B",
+                "label_offset_x": 205,
+                "label_offset_y": 0
+            },
+            "size_slider": {
+                "y": 805,
+                "color": [
+                    150,
+                    150,
+                    150,
+                    255
+                ],
+                "label": "Size:",
+                "label_y": 770,
+                "label_offset_x": 0,
+                "min": 1,
+                "max": 50
+            },
+            "handle_color": [
+                255,
+                255,
+                255,
+                255
+            ],
+            "handle_outline_color": [
+                0,
+                0,
+                0,
+                255
+            ],
+            "handle_outline_thickness": 2
+        }
+    },
+    "dropdowns": {
+        "file_menu": {
+            "x": 10,
+            "y": 40,
+            "width": 150,
+            "item_height": 35,
+            "background_color": [
+                45,
+                45,
+                50,
+                255
+            ],
+            "outline_color": [
+                80,
+                80,
+                85,
+                255
+            ],
+            "outline_thickness": 2,
+            "button_color": [
+                50,
+                50,
+                55,
+                255
+            ],
+            "button_hover_color": [
+                70,
+                100,
+                130,
+                255
+            ],
+            "font_size": 16,
+            "text_offset_x": 8,
+            "text_offset_y": 6,
+            "items": [
+                "New",
+                "Open",
+                "Save"
+            ]
+        },
+        "options_menu": {
+            "x": 100,
+            "y": 40,
+            "width": 220,
+            "item_height": 35,
+            "background_color": [
+                45,
+                45,
+                50,
+                255
+            ],
+            "outline_color": [
+                80,
+                80,
+                85,
+                255
+            ],
+            "outline_thickness": 2,
+            "button_color": [
+                50,
+                50,
+                55,
+                255
+            ],
+            "button_hover_color": [
+                70,
+                100,
+                130,
+                255
+            ],
+            "font_size": 16,
+            "text_offset_x": 33,
+            "text_offset_y": 6,
+            "checkbox_size": 16,
+            "checkbox_offset_x": 8,
+            "checkbox_offset_y": 8,
+            "checkbox_color": [
+                30,
+                30,
+                35,
+                255
+            ],
+            "checkbox_checked_color": [
+                50,
+                200,
+                50,
+                255
+            ],
+            "checkbox_outline_color": [
+                150,
+                150,
+                155,
+                255
+            ],
+            "checkbox_outline_thickness": 2,
+            "items": [
+                {
+                    "text": "Show Grid",
+                    "type": "checkbox"
+                },
+                {
+                    "text": "Snap to Grid",
+                    "type": "checkbox"
+                },
+                {
+                    "text": "Symmetry: None",
+                    "type": "cycle"
+                },
+                {
+                    "text": "Show Debug",
+                    "type": "checkbox"
+                },
+                {
+                    "text": "Flip Horizontal",
+                    "type": "action"
+                },
+                {
+                    "text": "Flip Vertical",
+                    "type": "action"
+                }
+            ]
+        }
+    },
+    "colors": {
+        "background": [
+            40,
+            40,
+            45,
+            255
+        ],
+        "text_primary": [
+            255,
+            255,
+            255,
+            255
+        ],
+        "grid": [
+            100,
+            100,
+            100,
+            100
+        ],
+        "cursor_fill": [
+            255,
+            255,
+            255,
+            200
+        ],
+        "cursor_outline": [
+            0,
+            0,
+            0,
+            255
+        ]
+    },
+    "grid": {
+        "default_size": 20,
+        "color": [
+            100,
+            100,
+            100,
+            100
+        ]
+    },
+    "cursor": {
+        "radius": 4,
+        "fill_color": [
+            255,
+            255,
+            255,
+            200
+        ],
+        "outline_color": [
+            0,
+            0,
+            0,
+            255
+        ],
+        "outline_thickness": 2
+    },
+    "fonts": {
+        "primary_path": "/System/Library/Fonts/Helvetica.ttc",
+        "fallback_path": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    },
+    "file_explorer": {
+        "icons": {
+            "folder": "assets/icons/folder.png",
+            "image": "assets/icons/image.png",
+            "file": "assets/icons/file.png",
+            "icon_size": 20,
+            "icon_offset_x": 5,
+            "icon_offset_y": 5
+        }
+    }
+}

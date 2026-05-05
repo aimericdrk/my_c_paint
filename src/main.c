@@ -1,7 +1,13 @@
-#include "../include/paint.h"
+/*
+** CCU PROJECT, 2026
+** my c paint
+** File description:
+**
+*/
 
-int main(void)
-{
+#include "paint.h"
+
+int main(void) {
     printf("\n");
     printf("╔════════════════════════════════════════╗\n");
     printf("║     🎨 PAINT - CSFML Edition 🎨        ║\n");
@@ -10,8 +16,7 @@ int main(void)
 
     app_t *app = init_app();
 
-    if (!app)
-    {
+    if (!app) {
         printf("Failed to initialize application!\n");
         return 84;
     }

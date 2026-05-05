@@ -6,10 +6,10 @@
         "framerate": 60
     },
     "canvas": {
-        "width": 1000,
-        "height": 700,
-        "x": 50,
-        "y": 90,
+        "width": 1130,
+        "height": 750,
+        "x": 10,
+        "y": 60,
         "background_color": [
             255,
             255,
@@ -18,7 +18,7 @@
         ]
     },
     "topbar": {
-        "height": 40,
+        "height": 50,
         "color": [
             35,
             35,
@@ -28,7 +28,7 @@
         "buttons": {
             "file": {
                 "x": 10,
-                "y": 5,
+                "y": 10,
                 "width": 80,
                 "height": 30,
                 "text": "File",
@@ -51,7 +51,7 @@
             },
             "options": {
                 "x": 100,
-                "y": 5,
+                "y": 10,
                 "width": 100,
                 "height": 30,
                 "text": "Options",

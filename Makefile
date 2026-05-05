@@ -39,23 +39,48 @@ INC_DIR     = include
 #                                 SOURCE FILES                                 
 # ═══════════════════════════════════════════════════════════════════════════
 
-SRC         = $(SRC_DIR)/main.c \
-              $(SRC_DIR)/app.c \
-              $(SRC_DIR)/paint.c \
-              $(SRC_DIR)/ui.c \
-              $(SRC_DIR)/utils.c \
-              $(LIB_DIR)/cJSON.c \
-              $(SRC_DIR)/config.c \
-              $(SRC_DIR)/file_explorer.c
+SRC         = src/main.c \
+              src/app/app_destroy.c \
+              src/app/app_init.c \
+              src/app/app_render.c \
+              src/app/app_runner.c \
+              src/app/events/handle_events.c \
+			  src/config/config_manager.c \
+              src/config/utils/config_get_default.c \
+              src/config/utils/config_get_other.c \
+              src/file_explorer/destroy_file_explorer.c \
+              src/file_explorer/event/click.c \
+              src/file_explorer/event/input_text.c \
+              src/file_explorer/event/key_press.c \
+              src/file_explorer/init_file_explorer.c \
+              src/file_explorer/run_file_explorer.c \
+              src/file_explorer/state_manager_file_explorer.c \
+              src/file_explorer/utils_file_explorer.c \
+			  src/paint/destroy_paint.c \
+              src/paint/draw/draw_at_position.c \
+              src/paint/draw/draw_circle_point.c \
+              src/paint/draw/draw_fill.c \
+              src/paint/draw/draw_line.c \
+              src/paint/draw/draw_tools.c \
+              src/paint/draw/draw_with_symmetry.c \
+              src/paint/event_paint.c \
+              src/paint/flip_canvas.c \
+              src/paint/init_paint_state.c \
+              src/paint/utils_paint.c \
+			  src/ui/destroy_ui.c \
+              src/ui/display_ui.c \
+              src/ui/event_ui.c \
+              src/ui/init_ui.c \
+              src/ui/update_ui.c \
+              src/utils/debug.c \
+              src/utils/files_manager.c \
+              src/utils/mouse.c \
+              src/utils/undo_redo.c \
+              src/utils/utils.c \
+              lib/cJSON.c
 
-OBJ         = $(OBJ_DIR)/main.o \
-              $(OBJ_DIR)/app.o \
-              $(OBJ_DIR)/paint.o \
-              $(OBJ_DIR)/ui.o \
-              $(OBJ_DIR)/utils.o \
-              $(OBJ_DIR)/cJSON.o \
-              $(OBJ_DIR)/config.o \
-              $(OBJ_DIR)/file_explorer.o
+# Auto-generate object files preserving directory structure
+OBJ         = $(patsubst src/%,$(OBJ_DIR)/%,$(patsubst lib/%,$(OBJ_DIR)/%,$(SRC:.c=.o)))
 
 # ═══════════════════════════════════════════════════════════════════════════
 #                                COLOR CODES                                   
@@ -115,24 +140,20 @@ $(NAME): $(OBJ)
 	@echo "$(BGREEN)✅ Linking complete!$(RESET)"
 	@echo ""
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
 	@echo "$(BCYAN)📦 Compiling:$(RESET) $(YELLOW)$<$(RESET) with command $(BCYAN)📦 Compiling:$(RESET) $(CC) $(CFLAGS) -c $< -o $@"
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "   $(GREEN)├─ Generated:$(RESET) $@"
 	@echo "   $(GREEN)└─ Status:$(RESET) $(BGREEN)✓ Success$(RESET)"
 	@echo ""
 
-$(OBJ_DIR)/%.o: $(LIB_DIR)/%.c | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(LIB_DIR)/%.c
+	@mkdir -p $(dir $@)
 	@echo "$(BCYAN)📦 Compiling:$(RESET) $(YELLOW)$<$(RESET) with command $(BCYAN)📦 Compiling:$(RESET) $(CC) $(CFLAGS) -c $< -o $@"
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "   $(GREEN)├─ Generated:$(RESET) $@"
 	@echo "   $(GREEN)└─ Status:$(RESET) $(BGREEN)✓ Success$(RESET)"
-	@echo ""
-
-$(OBJ_DIR):
-	@echo "$(BPURPLE)📁 Creating object directory...$(RESET)"
-	@mkdir -p $(OBJ_DIR)
-	@echo "$(BGREEN)✅ Directory created: $(RESET)$(OBJ_DIR)"
 	@echo ""
 
 footer:
@@ -223,6 +244,33 @@ install:
 	fi
 	@echo ""
 	@echo "$(BGREEN)✅ Installation complete!$(RESET)"
+	@echo ""
+
+getsrcs:
+	@echo ""
+	@echo "$(BCYAN)📁 Auto-discovered Source Files (Makefile format):$(RESET)"
+	@echo ""
+	@echo "SRC         = \c"
+	@first=1; \
+	for file in $$(find $(SRC_DIR) $(LIB_DIR) -name "*.c" 2>/dev/null | sort); do \
+		if [ $$first -eq 1 ]; then \
+			echo "$$file \\"; \
+			first=0; \
+		else \
+			echo "              $$file \\"; \
+		fi; \
+	done | sed '$$s/ \\$$//'
+	@echo ""
+	@echo "$(BWHITE)Total:$(RESET) $(BGREEN)$$(find $(SRC_DIR) $(LIB_DIR) -name '*.c' 2>/dev/null | wc -l | tr -d ' ') files$(RESET)"
+	@echo ""
+
+getproto:
+	@echo ""
+	@echo "$(BCYAN)📋 Auto-generated Function Prototypes (paint.h format):$(RESET)"
+	@echo ""
+	@find $(SRC_DIR) $(LIB_DIR) -name "*.c" 2>/dev/null | sort | xargs -I{} sh -c 'echo "// From file: {}"; grep -E "^[a-zA-Z_][a-zA-Z0-9_]*[ \t]+[a-zA-Z_][a-zA-Z0-9_]*\s*\(.*\)\s*{" {}' | sed 's/{$$//; s/^[ \t]*//; s/[ \t]*$$//' | sed '/^\/\//! s/$$/;/'
+	@echo ""
+	@echo "$(BWHITE)Prototypes generated!$(RESET)"
 	@echo ""
 
 help:

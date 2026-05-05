@@ -22,6 +22,7 @@
 #define MAX_FILE_ENTRIES 100
 #define MAX_PATH_LENGTH 512
 #define MAX_FILENAME_LENGTH 256
+#define MAX_FILL_STACK 50000
 
 typedef enum {
     TOOL_PEN,
@@ -259,6 +260,15 @@ typedef struct {
 app_t *init_app(void);
 void run_app(app_t *app);
 void cleanup_app(app_t *app);
+void render(app_t *app);
+void update(app_t *app);
+void handle_events(app_t *app);
+
+// Config functions
+void free_ui_config(ui_config_t *config);
+int config_get_int(cJSON *parent, const char *key, int default_value);
+float config_get_float(cJSON *parent, const char *key, float default_value);
+sfColor config_get_color(cJSON *parent, const char *key, sfColor default_color);
 
 // Paint functions
 paint_state_t *init_paint_state(int canvas_width, int canvas_height, int canvas_x, int canvas_y);
@@ -272,6 +282,8 @@ void fill_canvas(paint_state_t *paint, sfVector2i pos, sfColor target);
 void add_recent_color(paint_state_t *paint, sfColor color);
 void flip_canvas_horizontal(paint_state_t *paint);
 void flip_canvas_vertical(paint_state_t *paint);
+void draw_at_position(paint_state_t *paint, sfVector2i pos);
+int colors_match(sfColor c1, sfColor c2);
 
 // UI functions
 ui_elements_t *init_ui(sfFont *font, ui_config_t *config);
@@ -306,6 +318,7 @@ int is_point_in_rect(sfVector2i point, sfVector2f pos, sfVector2f size);
 sfColor get_pixel_color(sfRenderTexture *texture, int x, int y, int width, int height);
 void draw_line(sfRenderTexture *texture, sfVector2i p1, sfVector2i p2, sfColor color, int size);
 void draw_circle_point(sfRenderTexture *texture, sfVector2i pos, sfColor color, int size);
+sfVector2i get_scaled_mouse_pos(app_t *app);
 
 // Debug
 void render_debug_info(sfRenderWindow *window, paint_state_t *paint, sfFont *font, sfVector2i mouse_pos);

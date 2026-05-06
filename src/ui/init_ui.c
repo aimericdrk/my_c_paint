@@ -253,7 +253,7 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     ui->dropdown_buttons = malloc(sizeof(sfRectangleShape *) * ui->dropdown_count);
     ui->dropdown_labels = malloc(sizeof(sfText *) * ui->dropdown_count);
 
-    const char *dropdown_names[] = {"New", "Open", "Save"};
+    const char *dropdown_names[] = {"New / Clear", "Open", "Save"};
 
     for (int i = 0; i < ui->dropdown_count; i++) {
         ui->dropdown_buttons[i] = sfRectangleShape_create();
@@ -546,6 +546,20 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     sfText_setCharacterSize(ui->ai_send_label, 14);
     sfText_setFillColor(ui->ai_send_label, sfWhite);
     sfText_setPosition(ui->ai_send_label, (sfVector2f){ai_panel_x + ai_panel_width - 50, ai_input_y + 10});
+
+    // Clear button (below send button)
+    ui->ai_clear_button = sfRectangleShape_create();
+    sfRectangleShape_setSize(ui->ai_clear_button, (sfVector2f){60, 35});
+    sfRectangleShape_setPosition(ui->ai_clear_button, (sfVector2f){ai_panel_x + ai_panel_width - 65, ai_input_y + 40});
+    sfRectangleShape_setFillColor(ui->ai_clear_button, (sfColor){180, 60, 60, 255});
+    sfRectangleShape_setOutlineColor(ui->ai_clear_button, (sfColor){200, 80, 80, 255});
+    sfRectangleShape_setOutlineThickness(ui->ai_clear_button, 1);
+
+    ui->ai_clear_label = sfText_create(font);
+    sfText_setString(ui->ai_clear_label, "Clear");
+    sfText_setCharacterSize(ui->ai_clear_label, 14);
+    sfText_setFillColor(ui->ai_clear_label, sfWhite);
+    sfText_setPosition(ui->ai_clear_label, (sfVector2f){ai_panel_x + ai_panel_width - 52, ai_input_y + 48});
 
     ui->ai_chat_scroll_offset = 0;
     ui->ai_input_buffer[0] = '\0';

@@ -408,12 +408,15 @@ void render_ui(sfRenderWindow *window, app_t *app) {
                             line_buffer[--len] = '\0';
                         }
 
-                        sfText_setString(msg_text, line_buffer);
-                        float line_y = y_offset + (message_line_count * line_height);
-                        sfText_setPosition(msg_text, (sfVector2f){ai_panel_x + ai_message_padding, line_y});
+                        // Safely set string and render, skip on error
+                        if (line_buffer[0] != '\0') {
+                            sfText_setString(msg_text, line_buffer);
+                            float line_y = y_offset + (message_line_count * line_height);
+                            sfText_setPosition(msg_text, (sfVector2f){ai_panel_x + ai_message_padding, line_y});
 
-                        if (line_y >= ai_panel_y && line_y < ai_panel_y + ai_chat_area_height) {
-                            sfRenderWindow_drawText(window, msg_text, NULL);
+                            if (line_y >= ai_panel_y && line_y < ai_panel_y + ai_chat_area_height) {
+                                sfRenderWindow_drawText(window, msg_text, NULL);
+                            }
                         }
 
                         message_line_count++;
@@ -557,6 +560,10 @@ void render_ui(sfRenderWindow *window, app_t *app) {
         // Draw send button
         sfRenderWindow_drawRectangleShape(window, ui->ai_send_button, NULL);
         sfRenderWindow_drawText(window, ui->ai_send_label, NULL);
+
+        // Draw clear button
+        sfRenderWindow_drawRectangleShape(window, ui->ai_clear_button, NULL);
+        sfRenderWindow_drawText(window, ui->ai_clear_label, NULL);
     }
 
     // Draw top bar (always visible)

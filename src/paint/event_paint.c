@@ -67,7 +67,8 @@ void finish_shape(paint_state_t *paint, sfFont *font) {
         sfCircleShape_setRadius(circle, radius);
         sfCircleShape_setPosition(circle, (sfVector2f){start.x - radius, start.y - radius});
         sfCircleShape_setFillColor(circle, paint->current_color);
-        sfRenderTexture_drawCircleShape(target, circle, NULL);
+        sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+        sfRenderTexture_drawCircleShape(target, circle, &states);
         sfCircleShape_destroy(circle);
     } else if (paint->current_tool == TOOL_FILLED_RECTANGLE) {
         // Draw filled rectangle
@@ -82,7 +83,8 @@ void finish_shape(paint_state_t *paint, sfFont *font) {
         sfRectangleShape_setPosition(rect, (sfVector2f){x1, y1});
         sfRectangleShape_setSize(rect, (sfVector2f){width, height});
         sfRectangleShape_setFillColor(rect, paint->current_color);
-        sfRenderTexture_drawRectangleShape(target, rect, NULL);
+        sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+        sfRenderTexture_drawRectangleShape(target, rect, &states);
         sfRectangleShape_destroy(rect);
     } else if (paint->current_tool == TOOL_TEXT) {
         // Draw text at the starting position
@@ -94,7 +96,8 @@ void finish_shape(paint_state_t *paint, sfFont *font) {
             sfText_setFillColor(text, paint->current_color);
             sfText_setPosition(text, (sfVector2f){start.x, start.y});
 
-            sfRenderTexture_drawText(target, text, NULL);
+            sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+            sfRenderTexture_drawText(target, text, &states);
             sfText_destroy(text);
 
             // Clear text buffer and deactivate input

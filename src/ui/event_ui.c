@@ -43,7 +43,7 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
             sfVector2f btn_size = sfRectangleShape_getSize(app->ui->dropdown_buttons[i]);
 
             if (is_point_in_rect(mouse_pos, btn_pos, btn_size)) {
-                const char *actions[] = {"New", "Open", "Save"};
+                const char *actions[] = {"New / Clear", "Open", "Save"};
                 printf("%s clicked\n", actions[i]);
 
                 if (i == 0) { // New
@@ -386,6 +386,16 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
                 app->ui->ai_input_buffer[0] = '\0';
                 app->ui->ai_input_cursor = 0;
             }
+            return;
+        }
+
+        // Check AI Chat clear button
+        sfVector2f clear_pos = sfRectangleShape_getPosition(app->ui->ai_clear_button);
+        sfVector2f clear_size = sfRectangleShape_getSize(app->ui->ai_clear_button);
+
+        if (is_point_in_rect(mouse_pos, clear_pos, clear_size)) {
+            clear_ai_chat(app->ai_chat);
+            app->ui->ai_chat_scroll_offset = 0;
             return;
         }
 

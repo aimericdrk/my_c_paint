@@ -340,6 +340,8 @@ typedef struct {
     sfText *ai_input_text;
     sfRectangleShape *ai_send_button;
     sfText *ai_send_label;
+    sfRectangleShape *ai_clear_button;
+    sfText *ai_clear_label;
     sfRectangleShape *ai_chat_area;
     sfRectangleShape *ai_scrollbar;
     sfRectangleShape *ai_scrollbar_thumb;
@@ -461,6 +463,7 @@ void render_debug_info(sfRenderWindow *window, paint_state_t *paint, sfFont *fon
 ai_chat_t *init_ai_chat(void);
 void cleanup_ai_chat(ai_chat_t *chat);
 void add_ai_message(ai_chat_t *chat, message_type_t type, const char *content);
+void clear_ai_chat(ai_chat_t *chat);
 void send_ai_request(app_t *app, const char *user_message);
 void parse_and_execute_ai_response(app_t *app, const char *response);
 void execute_drawing_command(app_t *app, const char *command, float progress);

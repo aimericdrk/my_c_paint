@@ -178,6 +178,10 @@ void cleanup_ui(ui_elements_t *ui) {
         sfRectangleShape_destroy(ui->ai_send_button);
     if (ui->ai_send_label)
         sfText_destroy(ui->ai_send_label);
+    if (ui->ai_clear_button)
+        sfRectangleShape_destroy(ui->ai_clear_button);
+    if (ui->ai_clear_label)
+        sfText_destroy(ui->ai_clear_label);
 
     free(ui);
 }

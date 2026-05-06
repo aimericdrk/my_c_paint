@@ -96,7 +96,8 @@ void render(app_t *app) {
                 vertex.color = gradient_color;
                 sfVertexArray_append(line, vertex);
             }
-            sfRenderWindow_drawVertexArray(app->window, line, NULL);
+            sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+            sfRenderWindow_drawVertexArray(app->window, line, &states);
             sfVertexArray_destroy(line);
         } else if (app->paint->current_tool == TOOL_STAR) {
             // Preview star shape
@@ -115,7 +116,8 @@ void render(app_t *app) {
                 vertex.color = app->paint->current_color;
                 sfVertexArray_append(star, vertex);
             }
-            sfRenderWindow_drawVertexArray(app->window, star, NULL);
+            sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+            sfRenderWindow_drawVertexArray(app->window, star, &states);
             sfVertexArray_destroy(star);
         } else if (app->paint->current_tool == TOOL_SELECT_RECT) {
             // Preview selection rectangle with dashed outline
@@ -150,7 +152,8 @@ void render(app_t *app) {
                 sfVertex v2 = {{app->paint->polygon_points[i].x + app->canvas_x, app->paint->polygon_points[i].y + app->canvas_y}, app->paint->current_color, {0, 0}};
                 sfVertexArray_append(line, v1);
                 sfVertexArray_append(line, v2);
-                sfRenderWindow_drawVertexArray(app->window, line, NULL);
+                sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+                sfRenderWindow_drawVertexArray(app->window, line, &states);
                 sfVertexArray_destroy(line);
             }
         }

@@ -82,7 +82,8 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 sfCircleShape_setRadius(circle, animated_radius);
                 sfCircleShape_setPosition(circle, (sfVector2f){x - animated_radius, y - animated_radius});
                 sfCircleShape_setFillColor(circle, color);
-                sfRenderTexture_drawCircleShape(target, circle, NULL);
+                sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+                sfRenderTexture_drawCircleShape(target, circle, &states);
                 sfCircleShape_destroy(circle);
 
                 sfRenderTexture_display(target);
@@ -132,7 +133,8 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 sfRectangleShape_setPosition(rect, (sfVector2f){x + offset_x, y + offset_y});
                 sfRectangleShape_setSize(rect, (sfVector2f){animated_width, animated_height});
                 sfRectangleShape_setFillColor(rect, color);
-                sfRenderTexture_drawRectangleShape(target, rect, NULL);
+                sfRenderStates states = {.blendMode = sfBlendAlpha, .transform = sfTransform_Identity, .texture = NULL, .shader = NULL};
+                sfRenderTexture_drawRectangleShape(target, rect, &states);
                 sfRectangleShape_destroy(rect);
 
                 sfRenderTexture_display(target);
@@ -240,9 +242,9 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                         x_right = temp;
                     }
 
-                    // Draw horizontal line
+                    // Draw horizontal line with size 3 to ensure solid fill without gaps
                     if (x_right >= x_left) {
-                        draw_line(target, (sfVector2i){x_left, y}, (sfVector2i){x_right, y}, color, 1);
+                        draw_line(target, (sfVector2i){x_left, y}, (sfVector2i){x_right, y}, color, 3);
                     }
                 }
 

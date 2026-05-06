@@ -149,9 +149,13 @@ void parse_and_execute_ai_response(app_t *app, const char *response) {
         cJSON *explanation = cJSON_GetObjectItem(commands_json, "explanation");
         cJSON *commands = cJSON_GetObjectItem(commands_json, "commands");
 
-        // Add explanation to chat
-        if (explanation && cJSON_IsString(explanation)) {
-            add_ai_message(app->ai_chat, MESSAGE_AI, explanation->valuestring);
+        // Add explanation to chat (safely handle encoding issues)
+        if (explanation && cJSON_IsString(explanation) && explanation->valuestring) {
+            // Skip if explanation is empty or too long
+            size_t exp_len = strlen(explanation->valuestring);
+            if (exp_len > 0 && exp_len < MAX_AI_MESSAGE_LENGTH) {
+                add_ai_message(app->ai_chat, MESSAGE_AI, explanation->valuestring);
+            }
         }
 
         // Add commands to queue instead of executing immediately
@@ -181,7 +185,11 @@ void parse_and_execute_ai_response(app_t *app, const char *response) {
     } else {
         // No structured commands, just add the message as-is
         printf("AI message is plain text (no JSON commands)\n");
-        add_ai_message(app->ai_chat, MESSAGE_AI, ai_message);
+
+        // Safely add message, checking length first
+        if (ai_message && strlen(ai_message) > 0 && strlen(ai_message) < MAX_AI_MESSAGE_LENGTH) {
+            add_ai_message(app->ai_chat, MESSAGE_AI, ai_message);
+        }
     }
 
     cJSON_Delete(json);

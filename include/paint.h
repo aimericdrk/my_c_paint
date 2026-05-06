@@ -20,7 +20,7 @@
 #define MAX_UNDO 50
 
 #define MAX_RECENT_COLORS 10
-#define MAX_POLYGON_POINTS 20
+#define MAX_POLYGON_POINTS 200
 
 #define MAX_FILE_ENTRIES 100
 #define MAX_PATH_LENGTH 512
@@ -78,8 +78,9 @@ typedef struct {
 } stroke_data_t;
 
 typedef struct {
-    sfRenderTexture *texture;
-    sfSprite *sprite;
+    sfRenderTexture *layer_textures[MAX_LAYERS];
+    int layer_count;
+    int current_layer;
 } undo_state_t;
 
 typedef struct {

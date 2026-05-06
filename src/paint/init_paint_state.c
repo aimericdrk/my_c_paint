@@ -70,8 +70,10 @@ paint_state_t *init_paint_state(int canvas_width, int canvas_height, int canvas_
     paint->undo_count = 0;
     paint->undo_position = -1;
     for (int i = 0; i < MAX_UNDO; i++) {
-        paint->undo_stack[i].texture = NULL;
-        paint->undo_stack[i].sprite = NULL;
+        paint->undo_stack[i].layer_count = 0;
+        for (int j = 0; j < MAX_LAYERS; j++) {
+            paint->undo_stack[i].layer_textures[j] = NULL;
+        }
     }
 
     // Initialize FPS counter

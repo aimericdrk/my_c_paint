@@ -10,12 +10,11 @@
 void save_undo_state(paint_state_t *paint) {
     // Clear any redo states after current position
     for (int i = paint->undo_position + 1; i < paint->undo_count; i++) {
-        if (paint->undo_stack[i].texture)
-            sfRenderTexture_destroy(paint->undo_stack[i].texture);
-        if (paint->undo_stack[i].sprite)
-            sfSprite_destroy(paint->undo_stack[i].sprite);
-        paint->undo_stack[i].texture = NULL;
-        paint->undo_stack[i].sprite = NULL;
+        for (int j = 0; j < paint->undo_stack[i].layer_count; j++) {
+            if (paint->undo_stack[i].layer_textures[j])
+                sfRenderTexture_destroy(paint->undo_stack[i].layer_textures[j]);
+            paint->undo_stack[i].layer_textures[j] = NULL;
+        }
     }
 
     // Move to next position
@@ -23,10 +22,10 @@ void save_undo_state(paint_state_t *paint) {
 
     // If we exceed the max, shift everything down
     if (paint->undo_position >= MAX_UNDO) {
-        if (paint->undo_stack[0].texture)
-            sfRenderTexture_destroy(paint->undo_stack[0].texture);
-        if (paint->undo_stack[0].sprite)
-            sfSprite_destroy(paint->undo_stack[0].sprite);
+        for (int j = 0; j < paint->undo_stack[0].layer_count; j++) {
+            if (paint->undo_stack[0].layer_textures[j])
+                sfRenderTexture_destroy(paint->undo_stack[0].layer_textures[j]);
+        }
 
         for (int i = 0; i < MAX_UNDO - 1; i++) {
             paint->undo_stack[i] = paint->undo_stack[i + 1];
@@ -34,18 +33,24 @@ void save_undo_state(paint_state_t *paint) {
         paint->undo_position = MAX_UNDO - 1;
     }
 
-    // Save current state
-    paint->undo_stack[paint->undo_position].texture = sfRenderTexture_create((sfVector2u){paint->canvas_width, paint->canvas_height}, NULL);
+    // Save current state - save all layer textures
+    undo_state_t *state = &paint->undo_stack[paint->undo_position];
+    state->layer_count = paint->layer_count;
+    state->current_layer = paint->current_layer;
 
-    // Copy current canvas to undo state
-    const sfTexture *canvas_tex = sfRenderTexture_getTexture(paint->canvas);
-    sfSprite *temp_sprite = sfSprite_create(canvas_tex);
+    for (int i = 0; i < paint->layer_count; i++) {
+        state->layer_textures[i] = sfRenderTexture_create((sfVector2u){paint->canvas_width, paint->canvas_height}, NULL);
 
-    sfRenderTexture_clear(paint->undo_stack[paint->undo_position].texture, sfTransparent);
-    sfRenderTexture_drawSprite(paint->undo_stack[paint->undo_position].texture, temp_sprite, NULL);
-    sfRenderTexture_display(paint->undo_stack[paint->undo_position].texture);
+        // Copy layer texture
+        const sfTexture *layer_tex = sfRenderTexture_getTexture(paint->layers[i].texture);
+        sfSprite *temp_sprite = sfSprite_create(layer_tex);
 
-    sfSprite_destroy(temp_sprite);
+        sfRenderTexture_clear(state->layer_textures[i], sfTransparent);
+        sfRenderTexture_drawSprite(state->layer_textures[i], temp_sprite, NULL);
+        sfRenderTexture_display(state->layer_textures[i]);
+
+        sfSprite_destroy(temp_sprite);
+    }
 
     paint->undo_count = paint->undo_position + 1;
 }
@@ -56,15 +61,24 @@ void undo(paint_state_t *paint) {
 
     paint->undo_position--;
 
-    // Restore from undo stack
-    const sfTexture *undo_tex = sfRenderTexture_getTexture(paint->undo_stack[paint->undo_position].texture);
-    sfSprite *restore_sprite = sfSprite_create(undo_tex);
+    // Restore layer states from undo stack
+    undo_state_t *state = &paint->undo_stack[paint->undo_position];
 
-    sfRenderTexture_clear(paint->canvas, sfWhite);
-    sfRenderTexture_drawSprite(paint->canvas, restore_sprite, NULL);
-    sfRenderTexture_display(paint->canvas);
+    for (int i = 0; i < state->layer_count && i < paint->layer_count; i++) {
+        const sfTexture *layer_tex = sfRenderTexture_getTexture(state->layer_textures[i]);
+        sfSprite *restore_sprite = sfSprite_create(layer_tex);
 
-    sfSprite_destroy(restore_sprite);
+        sfRenderTexture_clear(paint->layers[i].texture, sfTransparent);
+        sfRenderTexture_drawSprite(paint->layers[i].texture, restore_sprite, NULL);
+        sfRenderTexture_display(paint->layers[i].texture);
+
+        sfSprite_destroy(restore_sprite);
+    }
+
+    paint->current_layer = state->current_layer;
+
+    // Recomposite all layers
+    composite_layers(paint);
 }
 
 void redo(paint_state_t *paint) {
@@ -73,13 +87,22 @@ void redo(paint_state_t *paint) {
 
     paint->undo_position++;
 
-    // Restore from undo stack
-    const sfTexture *undo_tex = sfRenderTexture_getTexture(paint->undo_stack[paint->undo_position].texture);
-    sfSprite *restore_sprite = sfSprite_create(undo_tex);
+    // Restore layer states from undo stack
+    undo_state_t *state = &paint->undo_stack[paint->undo_position];
 
-    sfRenderTexture_clear(paint->canvas, sfWhite);
-    sfRenderTexture_drawSprite(paint->canvas, restore_sprite, NULL);
-    sfRenderTexture_display(paint->canvas);
+    for (int i = 0; i < state->layer_count && i < paint->layer_count; i++) {
+        const sfTexture *layer_tex = sfRenderTexture_getTexture(state->layer_textures[i]);
+        sfSprite *restore_sprite = sfSprite_create(layer_tex);
 
-    sfSprite_destroy(restore_sprite);
+        sfRenderTexture_clear(paint->layers[i].texture, sfTransparent);
+        sfRenderTexture_drawSprite(paint->layers[i].texture, restore_sprite, NULL);
+        sfRenderTexture_display(paint->layers[i].texture);
+
+        sfSprite_destroy(restore_sprite);
+    }
+
+    paint->current_layer = state->current_layer;
+
+    // Recomposite all layers
+    composite_layers(paint);
 }

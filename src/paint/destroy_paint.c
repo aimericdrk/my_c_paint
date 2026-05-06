@@ -23,10 +23,10 @@ void cleanup_paint_state(paint_state_t *paint) {
 
     // Cleanup undo stack
     for (int i = 0; i < MAX_UNDO; i++) {
-        if (paint->undo_stack[i].texture)
-            sfRenderTexture_destroy(paint->undo_stack[i].texture);
-        if (paint->undo_stack[i].sprite)
-            sfSprite_destroy(paint->undo_stack[i].sprite);
+        for (int j = 0; j < paint->undo_stack[i].layer_count; j++) {
+            if (paint->undo_stack[i].layer_textures[j])
+                sfRenderTexture_destroy(paint->undo_stack[i].layer_textures[j]);
+        }
     }
 
     free(paint);

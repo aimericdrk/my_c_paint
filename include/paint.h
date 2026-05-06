@@ -39,16 +39,18 @@ typedef enum {
     TOOL_PEN,
     TOOL_ERASER,
     TOOL_BRUSH,
+    TOOL_FOUNTAIN_PEN,
     TOOL_SPRAY,
     TOOL_LINE,
     TOOL_RECTANGLE,
     TOOL_CIRCLE,
     TOOL_FILL,
+    TOOL_FILLED_CIRCLE,
+    TOOL_FILLED_RECTANGLE,
     TOOL_TEXT,
     TOOL_GRADIENT,
     TOOL_POLYGON,
     TOOL_STAR,
-    TOOL_EYEDROPPER,
     TOOL_SELECT_RECT
 } tool_type_t;
 
@@ -60,6 +62,8 @@ typedef enum { TAB_PEN, TAB_COLOR, TAB_LAYER, TAB_IA } toolbar_tab_t;
 typedef enum { FILE_EXPLORER_CLOSED, FILE_EXPLORER_OPEN, FILE_EXPLORER_SAVE } file_explorer_mode_t;
 
 typedef enum { FILE_TYPE_FILE, FILE_TYPE_DIRECTORY, FILE_TYPE_PARENT } file_type_t;
+
+#define TOOL_NAMES {"Pen", "Eraser", "Brush", "Spray", "Line", "Rectangle", "Circle", "Fill", "Filled Circle", "Filled Rect", "Text"};
 
 typedef struct {
     sfVector2i start;
@@ -394,7 +398,7 @@ void cleanup_paint_state(paint_state_t *paint);
 void handle_drawing(paint_state_t *paint, sfVector2i mouse_pos);
 void draw_with_tool(paint_state_t *paint, sfVector2i pos);
 void draw_with_symmetry(paint_state_t *paint, sfVector2i pos);
-void finish_shape(paint_state_t *paint);
+void finish_shape(paint_state_t *paint, sfFont *font);
 void clear_canvas(paint_state_t *paint);
 void fill_canvas(paint_state_t *paint, sfVector2i pos, sfColor target);
 void add_recent_color(paint_state_t *paint, sfColor color);

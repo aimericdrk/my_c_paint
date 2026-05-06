@@ -79,7 +79,7 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     }
 
     // Tool buttons
-    ui->button_count = 8;
+    ui->button_count = 16;
     ui->buttons = malloc(sizeof(sfRectangleShape *) * ui->button_count);
     ui->labels = malloc(sizeof(sfText *) * ui->button_count);
     ui->tool_icons = malloc(sizeof(sfCircleShape *) * ui->button_count);
@@ -96,7 +96,8 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     (void)tool_btn_selected; // Used in render function
     int font_size = config_get_int(tools_cfg, "font_size", 20);
 
-    const char *tool_names[] = {"Pen", "Eraser", "Brush", "Spray", "Line", "Rectangle", "Circle", "Fill"};
+    const char *tool_names[] = {"Pen",  "Eraser",        "Brush",       "Fountain Pen", "Spray",    "Line",    "Rectangle", "Circle",
+                                "Fill", "Filled Circle", "Filled Rect", "Text",         "Gradient", "Polygon", "Star",      "Select"};
 
     for (int i = 0; i < ui->button_count; i++) {
         ui->buttons[i] = sfRectangleShape_create();

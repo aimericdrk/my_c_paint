@@ -20,6 +20,37 @@ void handle_events(app_t *app) {
             if (app->ui->file_explorer && app->ui->file_explorer->mode == FILE_EXPLORER_SAVE) {
                 handle_file_explorer_text(app->ui->file_explorer, event.text.unicode);
             }
+            // Handle text input for text tool
+            else if (app->paint->text_input_active && app->paint->current_tool == TOOL_TEXT) {
+                uint32_t unicode = event.text.unicode;
+
+                // Backspace - delete last character
+                if (unicode == 8) {
+                    int len = strlen(app->paint->text_buffer);
+                    if (len > 0) {
+                        app->paint->text_buffer[len - 1] = '\0';
+                    }
+                }
+                // Enter key - confirm text (will be drawn on mouse release)
+                else if (unicode == 13) {
+                    // Text will be drawn in finish_shape when user clicks
+                    printf("Text confirmed: %s\n", app->paint->text_buffer);
+                }
+                // Escape - cancel text input
+                else if (unicode == 27) {
+                    app->paint->text_input_active = 0;
+                    app->paint->text_buffer[0] = '\0';
+                    printf("Text input cancelled\n");
+                }
+                // Regular characters
+                else if (unicode >= 32 && unicode < 127) {
+                    int len = strlen(app->paint->text_buffer);
+                    if (len < 255) {
+                        app->paint->text_buffer[len] = (char)unicode;
+                        app->paint->text_buffer[len + 1] = '\0';
+                    }
+                }
+            }
             // Handle text input for AI chat
             else if (app->active_tab == TAB_IA && app->ui->ai_is_typing) {
                 uint32_t unicode = event.text.unicode;
@@ -294,24 +325,36 @@ void handle_events(app_t *app) {
                         app->options_dropdown_open = 0;
                     } else {
                         // Start drawing on canvas
-                        save_undo_state(app->paint);
-                        app->paint->is_drawing = 1;
                         app->paint->last_pos = (sfVector2i){mouse_pos.x - app->canvas_x, mouse_pos.y - app->canvas_y};
 
-                        if (app->paint->current_tool == TOOL_LINE || app->paint->current_tool == TOOL_RECTANGLE || app->paint->current_tool == TOOL_CIRCLE) {
-                            app->paint->shape_preview.start = app->paint->last_pos;
-                            app->paint->shape_preview.active = 1;
-                        } else if (app->paint->current_tool == TOOL_FILL) {
-                            // Get pixel color from current layer
-                            if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
-                                const sfTexture *tex = sfRenderTexture_getTexture(app->paint->layers[app->paint->current_layer].texture);
-                                sfImage *img = sfTexture_copyToImage(tex);
-                                sfColor target = sfImage_getPixel(img, (sfVector2u){app->paint->last_pos.x, app->paint->last_pos.y});
-                                sfImage_destroy(img);
-                                fill_canvas(app->paint, app->paint->last_pos, target);
+                        if (app->paint->current_tool == TOOL_POLYGON) {
+                            // Add point to polygon (doesn't need is_drawing flag)
+                            if (app->paint->polygon_point_count < MAX_POLYGON_POINTS) {
+                                app->paint->polygon_points[app->paint->polygon_point_count] = app->paint->last_pos;
+                                app->paint->polygon_point_count++;
+                                printf("Polygon point added: %d/%d\n", app->paint->polygon_point_count, MAX_POLYGON_POINTS);
                             }
                         } else {
-                            draw_with_tool(app->paint, app->paint->last_pos);
+                            save_undo_state(app->paint);
+                            app->paint->is_drawing = 1;
+
+                            if (app->paint->current_tool == TOOL_LINE || app->paint->current_tool == TOOL_RECTANGLE || app->paint->current_tool == TOOL_CIRCLE ||
+                                app->paint->current_tool == TOOL_FILLED_CIRCLE || app->paint->current_tool == TOOL_FILLED_RECTANGLE || app->paint->current_tool == TOOL_TEXT ||
+                                app->paint->current_tool == TOOL_GRADIENT || app->paint->current_tool == TOOL_STAR || app->paint->current_tool == TOOL_SELECT_RECT) {
+                                app->paint->shape_preview.start = app->paint->last_pos;
+                                app->paint->shape_preview.active = 1;
+                            } else if (app->paint->current_tool == TOOL_FILL) {
+                                // Get pixel color from current layer
+                                if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
+                                    const sfTexture *tex = sfRenderTexture_getTexture(app->paint->layers[app->paint->current_layer].texture);
+                                    sfImage *img = sfTexture_copyToImage(tex);
+                                    sfColor target = sfImage_getPixel(img, (sfVector2u){app->paint->last_pos.x, app->paint->last_pos.y});
+                                    sfImage_destroy(img);
+                                    fill_canvas(app->paint, app->paint->last_pos, target);
+                                }
+                            } else {
+                                draw_with_tool(app->paint, app->paint->last_pos);
+                            }
                         }
                     }
                 } else {
@@ -322,8 +365,30 @@ void handle_events(app_t *app) {
                     }
                 }
             } else if (event.mouseButton.button == sfMouseRight) {
+                // Polygon tool: right-click to finish polygon
+                if (app->paint->current_tool == TOOL_POLYGON && app->paint->polygon_point_count >= 3) {
+                    if (mouse_pos.x >= app->canvas_x && mouse_pos.x < app->canvas_x + app->canvas_width && mouse_pos.y >= app->canvas_y && mouse_pos.y < app->canvas_y + app->canvas_height) {
+                        // Save undo state before drawing
+                        save_undo_state(app->paint);
+
+                        // Draw the polygon
+                        if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
+                            sfRenderTexture *target = app->paint->layers[app->paint->current_layer].texture;
+                            // Draw lines between all points
+                            for (int i = 0; i < app->paint->polygon_point_count - 1; i++) {
+                                draw_line(target, app->paint->polygon_points[i], app->paint->polygon_points[i + 1], app->paint->current_color, app->paint->brush_size);
+                            }
+                            // Close the polygon
+                            draw_line(target, app->paint->polygon_points[app->paint->polygon_point_count - 1], app->paint->polygon_points[0], app->paint->current_color, app->paint->brush_size);
+                            sfRenderTexture_display(target);
+                            composite_layers(app->paint);
+                        }
+                        app->paint->polygon_point_count = 0;
+                        printf("Polygon completed\n");
+                    }
+                }
                 // Color picker from canvas
-                if (mouse_pos.x >= app->canvas_x && mouse_pos.x < app->canvas_x + app->canvas_width && mouse_pos.y >= app->canvas_y && mouse_pos.y < app->canvas_y + app->canvas_height) {
+                else if (mouse_pos.x >= app->canvas_x && mouse_pos.x < app->canvas_x + app->canvas_width && mouse_pos.y >= app->canvas_y && mouse_pos.y < app->canvas_y + app->canvas_height) {
                     sfVector2i canvas_pos = {mouse_pos.x - app->canvas_x, mouse_pos.y - app->canvas_y};
                     app->paint->current_color = get_pixel_color(app->paint->canvas, canvas_pos.x, canvas_pos.y, app->paint->canvas_width, app->paint->canvas_height);
                     printf("Picked color: R=%d G=%d B=%d\n", app->paint->current_color.r, app->paint->current_color.g, app->paint->current_color.b);
@@ -344,7 +409,7 @@ void handle_events(app_t *app) {
                 }
 
                 if (app->paint->shape_preview.active) {
-                    finish_shape(app->paint);
+                    finish_shape(app->paint, app->font);
                     app->paint->shape_preview.active = 0;
                 }
             }

@@ -26,7 +26,9 @@ void update(app_t *app) {
 
         sfVector2i canvas_pos = {mouse_pos.x - app->canvas_x, mouse_pos.y - app->canvas_y};
 
-        if (app->paint->current_tool == TOOL_LINE || app->paint->current_tool == TOOL_RECTANGLE || app->paint->current_tool == TOOL_CIRCLE) {
+        if (app->paint->current_tool == TOOL_LINE || app->paint->current_tool == TOOL_RECTANGLE || app->paint->current_tool == TOOL_CIRCLE || app->paint->current_tool == TOOL_FILLED_CIRCLE ||
+            app->paint->current_tool == TOOL_FILLED_RECTANGLE || app->paint->current_tool == TOOL_TEXT || app->paint->current_tool == TOOL_GRADIENT || app->paint->current_tool == TOOL_STAR ||
+            app->paint->current_tool == TOOL_SELECT_RECT) {
             app->paint->shape_preview.end = canvas_pos;
         } else {
             handle_drawing(app->paint, canvas_pos);

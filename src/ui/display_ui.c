@@ -49,6 +49,38 @@ void render_ui(sfRenderWindow *window, app_t *app) {
             sfRenderWindow_drawCircleShape(window, ui->tool_icons[i], NULL);
             sfRenderWindow_drawText(window, ui->labels[i], NULL);
         }
+
+        // Display text input buffer if text tool is active
+        if (paint->text_input_active && paint->current_tool == TOOL_TEXT) {
+            // Draw text input box
+            sfRectangleShape *text_box = sfRectangleShape_create();
+            sfRectangleShape_setPosition(text_box, (sfVector2f){app->toolbar_x + 15, 600});
+            sfRectangleShape_setSize(text_box, (sfVector2f){270, 80});
+            sfRectangleShape_setFillColor(text_box, (sfColor){30, 30, 35, 255});
+            sfRectangleShape_setOutlineColor(text_box, (sfColor){100, 150, 200, 255});
+            sfRectangleShape_setOutlineThickness(text_box, 2);
+            sfRenderWindow_drawRectangleShape(window, text_box, NULL);
+
+            // Draw label
+            sfText *label = sfText_create(ui->font);
+            sfText_setString(label, "Text Input:");
+            sfText_setCharacterSize(label, 14);
+            sfText_setFillColor(label, (sfColor){200, 200, 200, 255});
+            sfText_setPosition(label, (sfVector2f){app->toolbar_x + 25, 610});
+            sfRenderWindow_drawText(window, label, NULL);
+
+            // Draw text buffer
+            sfText *text = sfText_create(ui->font);
+            sfText_setString(text, strlen(paint->text_buffer) > 0 ? paint->text_buffer : "(type text...)");
+            sfText_setCharacterSize(text, 16);
+            sfText_setFillColor(text, strlen(paint->text_buffer) > 0 ? (sfColor){255, 255, 255, 255} : (sfColor){150, 150, 150, 255});
+            sfText_setPosition(text, (sfVector2f){app->toolbar_x + 25, 640});
+            sfRenderWindow_drawText(window, text, NULL);
+
+            sfText_destroy(label);
+            sfText_destroy(text);
+            sfRectangleShape_destroy(text_box);
+        }
     } else if (app->active_tab == TAB_COLOR) {
         // Draw color preview
         sfRectangleShape_setFillColor(ui->color_preview, paint->current_color);

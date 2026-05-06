@@ -19,6 +19,26 @@ void draw_at_position(paint_state_t *paint, sfVector2i pos) {
     case TOOL_PEN:
         draw_circle_point(target, pos, draw_color, paint->brush_size);
         break;
+    case TOOL_FOUNTAIN_PEN: {
+        // Fountain pen with angle-based width variation
+        int dx = pos.x - paint->last_pos.x;
+        int dy = pos.y - paint->last_pos.y;
+        float angle = atan2f(dy, dx);
+        float angle_variation = fabsf(sinf(2.0f * (angle - M_PI / 4.0f)));
+        float min_width = paint->brush_size * 0.3f;
+        float max_width = paint->brush_size * 1.5f;
+        float width = min_width + (max_width - min_width) * angle_variation;
+        float perpendicular_angle = angle + M_PI / 2.0f;
+        int steps = (int)(width * 2);
+        for (int i = -steps; i <= steps; i++) {
+            float offset = (float)i / (steps * 2.0f) * width;
+            sfVector2i draw_pos = {pos.x + (int)(offset * cosf(perpendicular_angle)), pos.y + (int)(offset * sinf(perpendicular_angle))};
+            if (draw_pos.x >= 0 && draw_pos.x < paint->canvas_width && draw_pos.y >= 0 && draw_pos.y < paint->canvas_height) {
+                draw_circle_point(target, draw_pos, draw_color, paint->brush_size * 0.4f);
+            }
+        }
+        break;
+    }
     case TOOL_ERASER:
         draw_circle_point(target, pos, (sfColor){0, 0, 0, 0}, paint->brush_size * 2);
         break;

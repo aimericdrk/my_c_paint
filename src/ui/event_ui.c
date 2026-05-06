@@ -126,8 +126,22 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
 
             if (is_point_in_rect(mouse_pos, btn_pos, btn_size)) {
                 app->paint->current_tool = (tool_type_t)i;
-                const char *tool_names[] = {"Pen", "Eraser", "Brush", "Spray", "Line", "Rectangle", "Circle", "Fill"};
+                const char *tool_names[] = {"Pen",  "Eraser",        "Brush",       "Fountain Pen", "Spray",    "Line",    "Rectangle", "Circle",
+                                            "Fill", "Filled Circle", "Filled Rect", "Text",         "Gradient", "Polygon", "Star",      "Select"};
                 printf("Tool changed to: %s\n", tool_names[i]);
+
+                // If text tool is selected, activate text input
+                if (app->paint->current_tool == TOOL_TEXT) {
+                    app->paint->text_input_active = 1;
+                    app->paint->text_buffer[0] = '\0';
+                    printf("Text input activated\n");
+                }
+                // Reset polygon points when switching to polygon tool
+                if (app->paint->current_tool == TOOL_POLYGON) {
+                    app->paint->polygon_point_count = 0;
+                    printf("Polygon tool: Click to add points, right-click to finish\n");
+                }
+
                 return;
             }
         }

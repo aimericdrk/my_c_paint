@@ -160,11 +160,19 @@
                 "Pen",
                 "Eraser",
                 "Brush",
+                "Fountain Pen",
                 "Spray",
                 "Line",
                 "Rectangle",
                 "Circle",
-                "Fill"
+                "Fill",
+                "Filled Circle",
+                "Filled Rect",
+                "Text",
+                "Gradient",
+                "Polygon",
+                "Star",
+                "Select"
             ]
         },
         "color_preview": {

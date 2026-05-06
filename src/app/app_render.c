@@ -43,6 +43,116 @@ void render(app_t *app) {
             sfCircleShape_setFillColor(circle, sfTransparent);
             sfRenderWindow_drawCircleShape(app->window, circle, NULL);
             sfCircleShape_destroy(circle);
+        } else if (app->paint->current_tool == TOOL_FILLED_CIRCLE) {
+            int dx = end.x - start.x;
+            int dy = end.y - start.y;
+            float radius = sqrt(dx * dx + dy * dy);
+            sfCircleShape *circle = sfCircleShape_create();
+            sfCircleShape_setRadius(circle, radius);
+            sfCircleShape_setPosition(circle, (sfVector2f){start.x + app->canvas_x - radius, start.y + app->canvas_y - radius});
+            sfColor preview_color = app->paint->current_color;
+            preview_color.a = 128; // Semi-transparent preview
+            sfCircleShape_setFillColor(circle, preview_color);
+            sfCircleShape_setOutlineColor(circle, app->paint->current_color);
+            sfCircleShape_setOutlineThickness(circle, 1);
+            sfRenderWindow_drawCircleShape(app->window, circle, NULL);
+            sfCircleShape_destroy(circle);
+        } else if (app->paint->current_tool == TOOL_FILLED_RECTANGLE) {
+            sfRectangleShape *rect = sfRectangleShape_create();
+            sfRectangleShape_setPosition(rect, (sfVector2f){fmin(start.x, end.x) + app->canvas_x, fmin(start.y, end.y) + app->canvas_y});
+            sfRectangleShape_setSize(rect, (sfVector2f){abs(end.x - start.x), abs(end.y - start.y)});
+            sfColor preview_color = app->paint->current_color;
+            preview_color.a = 128; // Semi-transparent preview
+            sfRectangleShape_setFillColor(rect, preview_color);
+            sfRectangleShape_setOutlineColor(rect, app->paint->current_color);
+            sfRectangleShape_setOutlineThickness(rect, 1);
+            sfRenderWindow_drawRectangleShape(app->window, rect, NULL);
+            sfRectangleShape_destroy(rect);
+        } else if (app->paint->current_tool == TOOL_TEXT && strlen(app->paint->text_buffer) > 0) {
+            // Preview text at start position
+            sfText *text = sfText_create(app->font);
+            sfText_setString(text, app->paint->text_buffer);
+            sfText_setCharacterSize(text, app->paint->brush_size * 3);
+            sfColor preview_color = app->paint->current_color;
+            preview_color.a = 180; // Semi-transparent preview
+            sfText_setFillColor(text, preview_color);
+            sfText_setPosition(text, (sfVector2f){start.x + app->canvas_x, start.y + app->canvas_y});
+            sfRenderWindow_drawText(app->window, text, NULL);
+            sfText_destroy(text);
+        } else if (app->paint->current_tool == TOOL_GRADIENT) {
+            // Preview gradient line
+            sfVertexArray *line = sfVertexArray_create();
+            sfVertexArray_setPrimitiveType(line, sfLineStrip);
+            int dx = end.x - start.x;
+            int dy = end.y - start.y;
+            float length = sqrt(dx * dx + dy * dy);
+            int steps = (int)length;
+            for (int i = 0; i <= fmin(steps, 100); i++) {
+                float t = (float)i / fmin(steps, 100);
+                sfVertex vertex;
+                vertex.position = (sfVector2f){start.x + dx * t + app->canvas_x, start.y + dy * t + app->canvas_y};
+                sfColor gradient_color = app->paint->current_color;
+                gradient_color.a = (uint8_t)(app->paint->current_color.a * (0.1f - (t * (app->paint->brush_size * app->paint->brush_size))));
+                vertex.color = gradient_color;
+                sfVertexArray_append(line, vertex);
+            }
+            sfRenderWindow_drawVertexArray(app->window, line, NULL);
+            sfVertexArray_destroy(line);
+        } else if (app->paint->current_tool == TOOL_STAR) {
+            // Preview star shape
+            int dx = end.x - start.x;
+            int dy = end.y - start.y;
+            float outer_radius = sqrt(dx * dx + dy * dy);
+            float inner_radius = outer_radius * 0.4f;
+            int points = 5;
+            sfVertexArray *star = sfVertexArray_create();
+            sfVertexArray_setPrimitiveType(star, sfLineStrip);
+            for (int i = 0; i <= points * 2; i++) {
+                float angle = (float)(i % (points * 2)) * M_PI / points - M_PI / 2.0f;
+                float radius = (i % 2 == 0) ? outer_radius : inner_radius;
+                sfVertex vertex;
+                vertex.position = (sfVector2f){start.x + radius * cos(angle) + app->canvas_x, start.y + radius * sin(angle) + app->canvas_y};
+                vertex.color = app->paint->current_color;
+                sfVertexArray_append(star, vertex);
+            }
+            sfRenderWindow_drawVertexArray(app->window, star, NULL);
+            sfVertexArray_destroy(star);
+        } else if (app->paint->current_tool == TOOL_SELECT_RECT) {
+            // Preview selection rectangle with dashed outline
+            sfRectangleShape *rect = sfRectangleShape_create();
+            sfRectangleShape_setPosition(rect, (sfVector2f){fmin(start.x, end.x) + app->canvas_x, fmin(start.y, end.y) + app->canvas_y});
+            sfRectangleShape_setSize(rect, (sfVector2f){abs(end.x - start.x), abs(end.y - start.y)});
+            sfRectangleShape_setFillColor(rect, sfTransparent);
+            sfRectangleShape_setOutlineColor(rect, (sfColor){100, 150, 255, 255});
+            sfRectangleShape_setOutlineThickness(rect, 2);
+            sfRenderWindow_drawRectangleShape(app->window, rect, NULL);
+            sfRectangleShape_destroy(rect);
+        }
+    }
+
+    // Render polygon points if polygon tool is active
+    if (app->paint->current_tool == TOOL_POLYGON && app->paint->polygon_point_count > 0) {
+        for (int i = 0; i < app->paint->polygon_point_count; i++) {
+            sfCircleShape *point = sfCircleShape_create();
+            sfCircleShape_setRadius(point, 4);
+            sfCircleShape_setPosition(point, (sfVector2f){app->paint->polygon_points[i].x + app->canvas_x - 4, app->paint->polygon_points[i].y + app->canvas_y - 4});
+            sfCircleShape_setFillColor(point, app->paint->current_color);
+            sfCircleShape_setOutlineColor(point, sfWhite);
+            sfCircleShape_setOutlineThickness(point, 1);
+            sfRenderWindow_drawCircleShape(app->window, point, NULL);
+            sfCircleShape_destroy(point);
+
+            // Draw lines between points
+            if (i > 0) {
+                sfVertexArray *line = sfVertexArray_create();
+                sfVertexArray_setPrimitiveType(line, sfLines);
+                sfVertex v1 = {{app->paint->polygon_points[i - 1].x + app->canvas_x, app->paint->polygon_points[i - 1].y + app->canvas_y}, app->paint->current_color, {0, 0}};
+                sfVertex v2 = {{app->paint->polygon_points[i].x + app->canvas_x, app->paint->polygon_points[i].y + app->canvas_y}, app->paint->current_color, {0, 0}};
+                sfVertexArray_append(line, v1);
+                sfVertexArray_append(line, v2);
+                sfRenderWindow_drawVertexArray(app->window, line, NULL);
+                sfVertexArray_destroy(line);
+            }
         }
     }
 

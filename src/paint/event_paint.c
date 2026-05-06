@@ -25,7 +25,7 @@ void handle_drawing(paint_state_t *paint, sfVector2i mouse_pos) {
     paint->last_pos = mouse_pos;
 }
 
-void finish_shape(paint_state_t *paint) {
+void finish_shape(paint_state_t *paint, sfFont *font) {
     // Get current layer
     if (paint->current_layer < 0 || paint->current_layer >= paint->layer_count)
         return;
@@ -56,6 +56,110 @@ void finish_shape(paint_state_t *paint) {
         for (float angle = 0; angle < 2 * M_PI; angle += 0.01f) {
             sfVector2i point = {start.x + radius * cos(angle), start.y + radius * sin(angle)};
             draw_circle_point(target, point, paint->current_color, paint->brush_size);
+        }
+    } else if (paint->current_tool == TOOL_FILLED_CIRCLE) {
+        int dx = end.x - start.x;
+        int dy = end.y - start.y;
+        float radius = sqrt(dx * dx + dy * dy);
+
+        // Draw filled circle using sfCircleShape
+        sfCircleShape *circle = sfCircleShape_create();
+        sfCircleShape_setRadius(circle, radius);
+        sfCircleShape_setPosition(circle, (sfVector2f){start.x - radius, start.y - radius});
+        sfCircleShape_setFillColor(circle, paint->current_color);
+        sfRenderTexture_drawCircleShape(target, circle, NULL);
+        sfCircleShape_destroy(circle);
+    } else if (paint->current_tool == TOOL_FILLED_RECTANGLE) {
+        // Draw filled rectangle
+        int x1 = fmin(start.x, end.x);
+        int y1 = fmin(start.y, end.y);
+        int x2 = fmax(start.x, end.x);
+        int y2 = fmax(start.y, end.y);
+        int width = x2 - x1;
+        int height = y2 - y1;
+
+        sfRectangleShape *rect = sfRectangleShape_create();
+        sfRectangleShape_setPosition(rect, (sfVector2f){x1, y1});
+        sfRectangleShape_setSize(rect, (sfVector2f){width, height});
+        sfRectangleShape_setFillColor(rect, paint->current_color);
+        sfRenderTexture_drawRectangleShape(target, rect, NULL);
+        sfRectangleShape_destroy(rect);
+    } else if (paint->current_tool == TOOL_TEXT) {
+        // Draw text at the starting position
+        if (strlen(paint->text_buffer) > 0 && font) {
+            // Create text object
+            sfText *text = sfText_create(font);
+            sfText_setString(text, paint->text_buffer);
+            sfText_setCharacterSize(text, paint->brush_size * 3);
+            sfText_setFillColor(text, paint->current_color);
+            sfText_setPosition(text, (sfVector2f){start.x, start.y});
+
+            sfRenderTexture_drawText(target, text, NULL);
+            sfText_destroy(text);
+
+            // Clear text buffer and deactivate input
+            paint->text_buffer[0] = '\0';
+            paint->text_input_active = 0;
+            printf("Text drawn: deactivated input\n");
+        }
+    } else if (paint->current_tool == TOOL_GRADIENT) {
+        // Draw gradient line from start to end
+        int dx = end.x - start.x;
+        int dy = end.y - start.y;
+        float length = sqrt(dx * dx + dy * dy);
+        int steps = (int)length;
+
+        for (int i = 0; i <= steps; i++) {
+            float t = (float)i / steps;
+            sfVector2i pos = {start.x + (int)(dx * t), start.y + (int)(dy * t)};
+
+            // Interpolate color from current color to transparent/black
+            sfColor gradient_color = paint->current_color;
+            gradient_color.a = (uint8_t)(paint->current_color.a * (1.0f - t));
+
+            draw_circle_point(target, pos, gradient_color, paint->brush_size);
+        }
+    } else if (paint->current_tool == TOOL_STAR) {
+        // Draw star shape with 5 points
+        int dx = end.x - start.x;
+        int dy = end.y - start.y;
+        float outer_radius = sqrt(dx * dx + dy * dy);
+        float inner_radius = outer_radius * 0.4f;
+        int points = 5;
+
+        sfVector2i star_points[10];
+        for (int i = 0; i < points * 2; i++) {
+            float angle = (float)i * M_PI / points - M_PI / 2.0f;
+            float radius = (i % 2 == 0) ? outer_radius : inner_radius;
+            star_points[i].x = start.x + (int)(radius * cos(angle));
+            star_points[i].y = start.y + (int)(radius * sin(angle));
+        }
+
+        // Draw lines between consecutive points
+        for (int i = 0; i < points * 2; i++) {
+            int next = (i + 1) % (points * 2);
+            draw_line(target, star_points[i], star_points[next], paint->current_color, paint->brush_size);
+        }
+    } else if (paint->current_tool == TOOL_SELECT_RECT) {
+        // Draw selection rectangle with dashed outline
+        int x1 = fmin(start.x, end.x);
+        int y1 = fmin(start.y, end.y);
+        int x2 = fmax(start.x, end.x);
+        int y2 = fmax(start.y, end.y);
+
+        sfColor select_color = {100, 150, 255, 255}; // Blue selection color
+
+        // Draw dashed lines
+        int dash_length = 5;
+        for (int x = x1; x <= x2; x += dash_length * 2) {
+            int end_x = fmin(x + dash_length, x2);
+            draw_line(target, (sfVector2i){x, y1}, (sfVector2i){end_x, y1}, select_color, 1);
+            draw_line(target, (sfVector2i){x, y2}, (sfVector2i){end_x, y2}, select_color, 1);
+        }
+        for (int y = y1; y <= y2; y += dash_length * 2) {
+            int end_y = fmin(y + dash_length, y2);
+            draw_line(target, (sfVector2i){x1, y}, (sfVector2i){x1, end_y}, select_color, 1);
+            draw_line(target, (sfVector2i){x2, y}, (sfVector2i){x2, end_y}, select_color, 1);
         }
     }
 

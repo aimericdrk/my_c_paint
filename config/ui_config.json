@@ -115,7 +115,8 @@
             "tabs_list": [
                 "Pen",
                 "Color",
-                "Layer"
+                "Layer",
+                "IA"
             ]
         },
         "tools": {
@@ -354,6 +355,53 @@
                 "Merge",
                 "Up",
                 "Down"
+            ]
+        },
+        "ai_chat": {
+            "panel_x": 15,
+            "panel_y": 115,
+            "panel_width": 270,
+            "panel_height": 500,
+            "chat_area_height": 420,
+            "input_height": 40,
+            "input_y": 640,
+            "send_button_width": 60,
+            "send_button_height": 35,
+            "send_button_x": 220,
+            "send_button_y": 642,
+            "message_padding": 10,
+            "message_spacing": 5,
+            "font_size": 12,
+            "scrollbar_width": 10,
+            "background_color": [
+                40,
+                40,
+                45,
+                255
+            ],
+            "input_bg_color": [
+                30,
+                30,
+                35,
+                255
+            ],
+            "user_message_color": [
+                70,
+                120,
+                200,
+                255
+            ],
+            "ai_message_color": [
+                60,
+                60,
+                65,
+                255
+            ],
+            "send_button_color": [
+                70,
+                120,
+                200,
+                255
             ]
         }
     },

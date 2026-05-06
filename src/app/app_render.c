@@ -78,6 +78,18 @@ void render(app_t *app) {
         }
     }
 
+    // Render AI drawing cursor
+    if (app->ai_chat && app->ai_chat->show_draw_cursor) {
+        sfCircleShape *ai_cursor = sfCircleShape_create();
+        sfCircleShape_setRadius(ai_cursor, 8);
+        sfCircleShape_setPosition(ai_cursor, (sfVector2f){app->ai_chat->draw_cursor_pos.x - 8, app->ai_chat->draw_cursor_pos.y - 8});
+        sfCircleShape_setFillColor(ai_cursor, (sfColor){255, 100, 0, 150});
+        sfCircleShape_setOutlineColor(ai_cursor, (sfColor){255, 150, 0, 255});
+        sfCircleShape_setOutlineThickness(ai_cursor, 2);
+        sfRenderWindow_drawCircleShape(app->window, ai_cursor, NULL);
+        sfCircleShape_destroy(ai_cursor);
+    }
+
     // Render UI
     render_ui(app->window, app);
 

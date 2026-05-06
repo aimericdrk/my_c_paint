@@ -284,6 +284,247 @@ void render_ui(sfRenderWindow *window, app_t *app) {
             sfRenderWindow_drawRectangleShape(window, *buttons[i], NULL);
             sfRenderWindow_drawText(window, *labels[i], NULL);
         }
+    } else if (app->active_tab == TAB_IA) {
+        // Draw AI Chat panel
+        cJSON *ai_chat_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "ai_chat") : NULL;
+        int ai_panel_x = app->toolbar_x + config_get_int(ai_chat_cfg, "panel_x", 15);
+        int ai_panel_y = config_get_int(ai_chat_cfg, "panel_y", 115);
+        int ai_chat_area_height = config_get_int(ai_chat_cfg, "chat_area_height", 420);
+        int ai_message_padding = config_get_int(ai_chat_cfg, "message_padding", 10);
+        int ai_message_spacing = config_get_int(ai_chat_cfg, "message_spacing", 5);
+        int ai_font_size = config_get_int(ai_chat_cfg, "font_size", 12);
+
+        // Draw chat background
+        sfRenderWindow_drawRectangleShape(window, ui->ai_chat_bg, NULL);
+
+        // Draw messages with word wrapping
+        if (app->ai_chat && app->ai_chat->message_count > 0) {
+            sfText *msg_text = sfText_create(ui->font);
+            sfText_setCharacterSize(msg_text, ai_font_size);
+
+            int y_offset = ai_panel_y + ai_message_padding - (ui->ai_chat_scroll_offset * 60);
+            int panel_width = config_get_int(ai_chat_cfg, "panel_width", 270);
+            float max_text_width = panel_width - (2 * ai_message_padding);
+            float line_height = ai_font_size + 4;
+
+            for (int i = 0; i < app->ai_chat->message_count && i < MAX_AI_MESSAGES; i++) {
+                ai_message_t *msg = &app->ai_chat->messages[i];
+
+                // Set color based on message type
+                if (msg->type == MESSAGE_USER) {
+                    sfText_setFillColor(msg_text, (sfColor){100, 180, 255, 255});
+                } else {
+                    sfText_setFillColor(msg_text, (sfColor){200, 200, 200, 255});
+                }
+
+                // Word wrap the message content
+                char line_buffer[MAX_AI_MESSAGE_LENGTH];
+                const char *text = msg->content;
+                int text_len = strlen(text);
+                int start = 0;
+                int message_line_count = 0;
+
+                while (start < text_len) {
+                    int end = start;
+                    int last_space = -1;
+
+                    // Find how much text fits on this line
+                    while (end < text_len) {
+                        if (text[end] == ' ' || text[end] == '\n') {
+                            last_space = end;
+                        }
+                        if (text[end] == '\n') {
+                            end++;
+                            break;
+                        }
+
+                        // Copy substring to test width
+                        int len = end - start + 1;
+                        if (len >= MAX_AI_MESSAGE_LENGTH)
+                            len = MAX_AI_MESSAGE_LENGTH - 1;
+                        strncpy(line_buffer, text + start, len);
+                        line_buffer[len] = '\0';
+
+                        sfText_setString(msg_text, line_buffer);
+                        sfFloatRect bounds = sfText_getGlobalBounds(msg_text);
+
+                        if (bounds.size.x > max_text_width) {
+                            // Line is too long, break at last space
+                            if (last_space > start) {
+                                end = last_space;
+                            } else if (end > start) {
+                                // No space found, break at current position
+                                end--;
+                            }
+                            break;
+                        }
+                        end++;
+                    }
+
+                    // Draw this line
+                    if (end > start) {
+                        int len = end - start;
+                        if (text[end - 1] == '\n')
+                            len--;
+                        if (len >= MAX_AI_MESSAGE_LENGTH)
+                            len = MAX_AI_MESSAGE_LENGTH - 1;
+                        strncpy(line_buffer, text + start, len);
+                        line_buffer[len] = '\0';
+
+                        // Trim trailing spaces
+                        while (len > 0 && line_buffer[len - 1] == ' ') {
+                            line_buffer[--len] = '\0';
+                        }
+
+                        sfText_setString(msg_text, line_buffer);
+                        float line_y = y_offset + (message_line_count * line_height);
+                        sfText_setPosition(msg_text, (sfVector2f){ai_panel_x + ai_message_padding, line_y});
+
+                        if (line_y >= ai_panel_y && line_y < ai_panel_y + ai_chat_area_height) {
+                            sfRenderWindow_drawText(window, msg_text, NULL);
+                        }
+
+                        message_line_count++;
+                    }
+
+                    // Move to next line
+                    start = end;
+                    while (start < text_len && (text[start] == ' ' || text[start] == '\n')) {
+                        start++;
+                    }
+                }
+
+                // Update y_offset for next message (with minimum height)
+                int message_height = message_line_count * line_height;
+                if (message_height < 20)
+                    message_height = 20;
+                y_offset += message_height + ai_message_spacing;
+            }
+
+            sfText_destroy(msg_text);
+        }
+
+        // Draw input box
+        sfRenderWindow_drawRectangleShape(window, ui->ai_input_box, NULL);
+
+        // Handle text scrolling and cursor rendering
+        sfVector2f input_pos = sfRectangleShape_getPosition(ui->ai_input_box);
+        sfVector2f input_size = sfRectangleShape_getSize(ui->ai_input_box);
+        float max_width = input_size.x - 10; // padding
+
+        sfText *temp_text = sfText_create(ui->font);
+        sfText_setCharacterSize(temp_text, 14);
+
+        // Calculate full text width
+        sfText_setString(temp_text, ui->ai_input_buffer);
+        sfFloatRect text_bounds = sfText_getGlobalBounds(temp_text);
+
+        // Check if we need multi-line display
+        if (text_bounds.size.x > max_width) {
+            // Multi-line rendering
+            char line_buffer[512];
+            int line_start = 0;
+            int line_count = 0;
+            float line_height = 18;
+            int len = strlen(ui->ai_input_buffer);
+
+            for (int i = 0; i <= len; i++) {
+                if (i > line_start) {
+                    strncpy(line_buffer, ui->ai_input_buffer + line_start, i - line_start);
+                    line_buffer[i - line_start] = '\0';
+
+                    sfText_setString(temp_text, line_buffer);
+                    sfFloatRect line_bounds = sfText_getGlobalBounds(temp_text);
+
+                    if (line_bounds.size.x > max_width || i == len) {
+                        // Draw this line
+                        if (line_bounds.size.x > max_width && i > line_start + 1) {
+                            i--; // Back up one character
+                            strncpy(line_buffer, ui->ai_input_buffer + line_start, i - line_start);
+                            line_buffer[i - line_start] = '\0';
+                        }
+
+                        sfText_setString(ui->ai_input_text, line_buffer);
+                        sfText_setPosition(ui->ai_input_text, (sfVector2f){input_pos.x + 5, input_pos.y + 10 + line_count * line_height});
+                        sfRenderWindow_drawText(window, ui->ai_input_text, NULL);
+
+                        // Draw cursor if in this line
+                        if (ui->ai_is_typing && ui->ai_input_cursor >= line_start && ui->ai_input_cursor <= i) {
+                            char before_cursor_line[512];
+                            int cursor_in_line = ui->ai_input_cursor - line_start;
+                            strncpy(before_cursor_line, line_buffer, cursor_in_line);
+                            before_cursor_line[cursor_in_line] = '\0';
+                            sfText_setString(temp_text, before_cursor_line);
+                            sfFloatRect cursor_line_bounds = sfText_getGlobalBounds(temp_text);
+
+                            float cursor_blink = sfTime_asSeconds(sfClock_getElapsedTime(app->cursor_blink_clock));
+                            if (fmodf(cursor_blink, 1.0f) < 0.5f) {
+                                sfRectangleShape *cursor = sfRectangleShape_create();
+                                sfRectangleShape_setSize(cursor, (sfVector2f){2, 16});
+                                sfRectangleShape_setPosition(cursor, (sfVector2f){input_pos.x + 5 + cursor_line_bounds.size.x, input_pos.y + 10 + line_count * line_height});
+                                sfRectangleShape_setFillColor(cursor, sfWhite);
+                                sfRenderWindow_drawRectangleShape(window, cursor, NULL);
+                                sfRectangleShape_destroy(cursor);
+                            }
+                        }
+
+                        line_count++;
+                        line_start = i + 1;
+                    }
+                }
+            }
+            ui->ai_input_display_lines = line_count;
+        } else {
+            // Single line rendering with horizontal scroll
+            ui->ai_input_display_lines = 1;
+
+            // Calculate cursor position in pixels
+            char before_cursor[512];
+            strncpy(before_cursor, ui->ai_input_buffer, ui->ai_input_cursor);
+            before_cursor[ui->ai_input_cursor] = '\0';
+            sfText_setString(temp_text, before_cursor);
+            sfFloatRect cursor_bounds = sfText_getGlobalBounds(temp_text);
+            float cursor_x = cursor_bounds.size.x;
+
+            // Adjust scroll to keep cursor visible
+            if (cursor_x - ui->ai_input_scroll_offset < 0) {
+                ui->ai_input_scroll_offset = cursor_x;
+            } else if (cursor_x - ui->ai_input_scroll_offset > max_width - 10) {
+                ui->ai_input_scroll_offset = cursor_x - max_width + 10;
+            }
+
+            // Don't scroll past the end
+            if (text_bounds.size.x - ui->ai_input_scroll_offset < max_width) {
+                ui->ai_input_scroll_offset = text_bounds.size.x - max_width;
+                if (ui->ai_input_scroll_offset < 0) {
+                    ui->ai_input_scroll_offset = 0;
+                }
+            }
+
+            // Render text with scroll offset
+            sfText_setString(ui->ai_input_text, ui->ai_input_buffer);
+            sfText_setPosition(ui->ai_input_text, (sfVector2f){input_pos.x + 5 - ui->ai_input_scroll_offset, input_pos.y + 10});
+            sfRenderWindow_drawText(window, ui->ai_input_text, NULL);
+
+            // Draw blinking cursor if typing
+            if (ui->ai_is_typing) {
+                float cursor_blink = sfTime_asSeconds(sfClock_getElapsedTime(app->cursor_blink_clock));
+                if (fmodf(cursor_blink, 1.0f) < 0.5f) {
+                    sfRectangleShape *cursor = sfRectangleShape_create();
+                    sfRectangleShape_setSize(cursor, (sfVector2f){2, 16});
+                    sfRectangleShape_setPosition(cursor, (sfVector2f){input_pos.x + 5 + cursor_x - ui->ai_input_scroll_offset, input_pos.y + 10});
+                    sfRectangleShape_setFillColor(cursor, sfWhite);
+                    sfRenderWindow_drawRectangleShape(window, cursor, NULL);
+                    sfRectangleShape_destroy(cursor);
+                }
+            }
+        }
+
+        sfText_destroy(temp_text);
+
+        // Draw send button
+        sfRenderWindow_drawRectangleShape(window, ui->ai_send_button, NULL);
+        sfRenderWindow_drawText(window, ui->ai_send_label, NULL);
     }
 
     // Draw top bar (always visible)

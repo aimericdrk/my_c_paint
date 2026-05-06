@@ -18,6 +18,9 @@ void run_app(app_t *app) {
 void update(app_t *app) {
     sfVector2i mouse_pos = get_scaled_mouse_pos(app);
 
+    // Process AI command queue for animated drawing
+    process_ai_command_queue(app);
+
     // Handle drawing
     if (app->paint->is_drawing && mouse_pos.x >= app->canvas_x && mouse_pos.x < app->canvas_x + app->canvas_width && mouse_pos.y >= app->canvas_y && mouse_pos.y < app->canvas_y + app->canvas_height) {
 

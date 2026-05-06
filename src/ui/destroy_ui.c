@@ -167,5 +167,17 @@ void cleanup_ui(ui_elements_t *ui) {
     if (ui->color_wheel_image)
         sfImage_destroy(ui->color_wheel_image);
 
+    // AI Chat cleanup
+    if (ui->ai_chat_bg)
+        sfRectangleShape_destroy(ui->ai_chat_bg);
+    if (ui->ai_input_box)
+        sfRectangleShape_destroy(ui->ai_input_box);
+    if (ui->ai_input_text)
+        sfText_destroy(ui->ai_input_text);
+    if (ui->ai_send_button)
+        sfRectangleShape_destroy(ui->ai_send_button);
+    if (ui->ai_send_label)
+        sfText_destroy(ui->ai_send_label);
+
     free(ui);
 }

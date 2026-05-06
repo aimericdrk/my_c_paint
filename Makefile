@@ -28,7 +28,7 @@ ifeq ($(ARCH),arm64)
 	CFLAGS	+=	-I$(HOMEBREW_PREFIX)/include
 endif
 
-LDFLAGS     = -L$(HOMEBREW_PREFIX)/lib -lcsfml-graphics -lcsfml-window -lcsfml-system -lm
+LDFLAGS     = -L$(HOMEBREW_PREFIX)/lib -lcsfml-graphics -lcsfml-window -lcsfml-system -lm -lcurl -lpthread
 
 SRC_DIR     = src
 LIB_DIR     = lib
@@ -48,6 +48,12 @@ SRC         = src/main.c \
 			  src/config/config_manager.c \
               src/config/utils/config_get_default.c \
               src/config/utils/config_get_other.c \
+			  src/ai/ai_manager.c \
+              src/ai/init_ai.c \
+              src/ai/ai_request.c \
+              src/ai/ai_parser.c \
+              src/ai/ai_command_queue.c \
+			  src/ai/ai_command_executor.c \
               src/file_explorer/destroy_file_explorer.c \
               src/file_explorer/event/click.c \
               src/file_explorer/event/input_text.c \
@@ -66,8 +72,12 @@ SRC         = src/main.c \
               src/paint/event_paint.c \
               src/paint/flip_canvas.c \
               src/paint/init_paint_state.c \
-			  src/paint/layers.c \
               src/paint/utils_paint.c \
+			  src/paint/layers/destroy_layer.c \
+              src/paint/layers/init_layer.c \
+              src/paint/layers/layer_manager.c \
+              src/paint/layers/layer_mover.c \
+              src/paint/layers/layers_utils.c \
 			  src/ui/destroy_ui.c \
               src/ui/display_ui.c \
               src/ui/event_ui.c \

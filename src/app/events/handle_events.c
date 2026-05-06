@@ -20,6 +20,45 @@ void handle_events(app_t *app) {
             if (app->ui->file_explorer && app->ui->file_explorer->mode == FILE_EXPLORER_SAVE) {
                 handle_file_explorer_text(app->ui->file_explorer, event.text.unicode);
             }
+            // Handle text input for AI chat
+            else if (app->active_tab == TAB_IA && app->ui->ai_is_typing) {
+                uint32_t unicode = event.text.unicode;
+
+                // Backspace - delete character before cursor
+                if (unicode == 8) {
+                    if (app->ui->ai_input_cursor > 0) {
+                        int len = strlen(app->ui->ai_input_buffer);
+                        // Shift characters left
+                        for (int i = app->ui->ai_input_cursor - 1; i < len; i++) {
+                            app->ui->ai_input_buffer[i] = app->ui->ai_input_buffer[i + 1];
+                        }
+                        app->ui->ai_input_cursor--;
+                    }
+                }
+                // Enter key - send message
+                else if (unicode == 13) {
+                    if (strlen(app->ui->ai_input_buffer) > 0) {
+                        add_ai_message(app->ai_chat, MESSAGE_USER, app->ui->ai_input_buffer);
+                        send_ai_request(app, app->ui->ai_input_buffer);
+                        app->ui->ai_input_buffer[0] = '\0';
+                        app->ui->ai_input_cursor = 0;
+                        app->ui->ai_input_scroll_offset = 0;
+                    }
+                }
+                // Regular characters - insert at cursor position
+                else if (unicode >= 32 && unicode < 127) {
+                    int len = strlen(app->ui->ai_input_buffer);
+                    if (len < 511) {
+                        // Shift characters right to make space
+                        for (int i = len; i >= app->ui->ai_input_cursor; i--) {
+                            app->ui->ai_input_buffer[i + 1] = app->ui->ai_input_buffer[i];
+                        }
+                        // Insert new character
+                        app->ui->ai_input_buffer[app->ui->ai_input_cursor] = (char)unicode;
+                        app->ui->ai_input_cursor++;
+                    }
+                }
+            }
         }
 
         // Handle mouse wheel scrolling for file explorer
@@ -79,6 +118,40 @@ void handle_events(app_t *app) {
                     }
                 }
             }
+            // Handle mouse wheel scrolling for AI chat
+            else if (app->active_tab == TAB_IA) {
+                sfVector2i mouse_pos = get_scaled_mouse_pos(app);
+
+                // Get AI chat panel configuration
+                ui_config_t *config = app->config;
+                cJSON *toolbar_cfg = config ? config_get_section(config, "toolbar") : NULL;
+                cJSON *ai_chat_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "ai_chat") : NULL;
+                int ai_panel_x = app->toolbar_x + config_get_int(ai_chat_cfg, "panel_x", 15);
+                int ai_panel_y = config_get_int(ai_chat_cfg, "panel_y", 115);
+                int ai_panel_width = config_get_int(ai_chat_cfg, "panel_width", 270);
+                int ai_chat_area_height = config_get_int(ai_chat_cfg, "chat_area_height", 420);
+
+                // Check if mouse is over AI chat panel
+                if (mouse_pos.x >= ai_panel_x && mouse_pos.x <= ai_panel_x + ai_panel_width && mouse_pos.y >= ai_panel_y && mouse_pos.y <= ai_panel_y + ai_chat_area_height) {
+
+                    int max_scroll = app->ai_chat->message_count - 5;
+                    if (max_scroll < 0)
+                        max_scroll = 0;
+
+                    // Scroll up
+                    if (event.mouseWheelScroll.delta > 0) {
+                        app->ui->ai_chat_scroll_offset -= 1;
+                        if (app->ui->ai_chat_scroll_offset < 0)
+                            app->ui->ai_chat_scroll_offset = 0;
+                    }
+                    // Scroll down
+                    else if (event.mouseWheelScroll.delta < 0) {
+                        app->ui->ai_chat_scroll_offset += 1;
+                        if (app->ui->ai_chat_scroll_offset > max_scroll)
+                            app->ui->ai_chat_scroll_offset = max_scroll;
+                    }
+                }
+            }
         }
 
         if (event.type == sfEvtKeyPressed) {
@@ -119,6 +192,44 @@ void handle_events(app_t *app) {
             if (event.key.control && event.key.code == sfKeyO) {
                 load_from_file(app->paint, "output.png");
                 printf("Loaded from output.png\n");
+            }
+
+            // AI Chat cursor movement
+            if (app->active_tab == TAB_IA && app->ui->ai_is_typing) {
+                int len = strlen(app->ui->ai_input_buffer);
+
+                // Left arrow - move cursor left
+                if (event.key.code == sfKeyLeft) {
+                    if (app->ui->ai_input_cursor > 0) {
+                        app->ui->ai_input_cursor--;
+                    }
+                }
+                // Right arrow - move cursor right
+                else if (event.key.code == sfKeyRight) {
+                    if (app->ui->ai_input_cursor < len) {
+                        app->ui->ai_input_cursor++;
+                    }
+                }
+                // Home - move to start
+                else if (event.key.code == sfKeyHome) {
+                    app->ui->ai_input_cursor = 0;
+                }
+                // End - move to end
+                else if (event.key.code == sfKeyEnd) {
+                    app->ui->ai_input_cursor = len;
+                }
+                // Delete - delete character after cursor
+                else if (event.key.code == sfKeyDelete) {
+                    if (app->ui->ai_input_cursor < len) {
+                        for (int i = app->ui->ai_input_cursor; i < len; i++) {
+                            app->ui->ai_input_buffer[i] = app->ui->ai_input_buffer[i + 1];
+                        }
+                    }
+                }
+                // Escape - deactivate input
+                else if (event.key.code == sfKeyEscape) {
+                    app->ui->ai_is_typing = 0;
+                }
             }
 
             // // Symmetry modes (M key to cycle)

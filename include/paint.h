@@ -7,6 +7,7 @@
 #include <CSFML/Window.h>
 #include <dirent.h>
 #include <math.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,14 +18,22 @@
 #include <unistd.h>
 
 #define MAX_UNDO 50
+
 #define MAX_RECENT_COLORS 10
 #define MAX_POLYGON_POINTS 20
+
 #define MAX_FILE_ENTRIES 100
 #define MAX_PATH_LENGTH 512
 #define MAX_FILENAME_LENGTH 256
+
 #define MAX_FILL_STACK 50000
+
 #define MAX_LAYERS 50
 #define MAX_LAYER_NAME 64
+
+#define MAX_AI_MESSAGES 100
+#define MAX_AI_MESSAGE_LENGTH 2048
+#define MAX_AI_COMMANDS 100
 
 typedef enum {
     TOOL_PEN,
@@ -45,7 +54,12 @@ typedef enum {
 
 typedef enum { SYMMETRY_NONE, SYMMETRY_HORIZONTAL, SYMMETRY_VERTICAL, SYMMETRY_BOTH, SYMMETRY_RADIAL_4, SYMMETRY_RADIAL_8 } symmetry_mode_t;
 
-typedef enum { TAB_PEN, TAB_COLOR, TAB_LAYER } toolbar_tab_t;
+typedef enum { TAB_PEN, TAB_COLOR, TAB_LAYER, TAB_IA } toolbar_tab_t;
+
+// File explorer enums and structures
+typedef enum { FILE_EXPLORER_CLOSED, FILE_EXPLORER_OPEN, FILE_EXPLORER_SAVE } file_explorer_mode_t;
+
+typedef enum { FILE_TYPE_FILE, FILE_TYPE_DIRECTORY, FILE_TYPE_PARENT } file_type_t;
 
 typedef struct {
     sfVector2i start;
@@ -130,15 +144,45 @@ typedef struct {
     float fps;
 } paint_state_t;
 
-typedef enum { FILE_TYPE_DIRECTORY, FILE_TYPE_FILE, FILE_TYPE_PARENT } file_entry_type_t;
+typedef enum { MESSAGE_USER, MESSAGE_AI } message_type_t;
+
+typedef struct {
+    message_type_t type;
+    char content[MAX_AI_MESSAGE_LENGTH];
+    char timestamp[32];
+} ai_message_t;
+
+typedef struct {
+    char command[256];
+    float progress;  // 0.0 to 1.0 for animation
+    int is_animated; // Whether this command should be animated
+} ai_command_t;
+
+typedef struct {
+    ai_message_t messages[MAX_AI_MESSAGES];
+    int message_count;
+    int is_processing;
+    char api_key[256];
+
+    // Command queue for animated execution
+    ai_command_t command_queue[MAX_AI_COMMANDS];
+    int command_count;
+    int current_command;
+    sfClock *command_timer;
+    sfVector2i draw_cursor_pos;
+    int show_draw_cursor;
+
+    // Threading support
+    pthread_t request_thread;
+    pthread_mutex_t mutex;
+    int thread_active;
+} ai_chat_t;
 
 typedef struct {
     char name[MAX_FILENAME_LENGTH];
-    file_entry_type_t type;
+    file_type_t type;
     int is_image;
 } file_entry_t;
-
-typedef enum { FILE_EXPLORER_CLOSED, FILE_EXPLORER_OPEN, FILE_EXPLORER_SAVE } file_explorer_mode_t;
 
 typedef struct {
     file_explorer_mode_t mode;
@@ -285,6 +329,22 @@ typedef struct {
     sfText *layer_down_label;
 
     int dragging_layer_opacity;
+
+    // AI Chat panel
+    sfRectangleShape *ai_chat_bg;
+    sfRectangleShape *ai_input_box;
+    sfText *ai_input_text;
+    sfRectangleShape *ai_send_button;
+    sfText *ai_send_label;
+    sfRectangleShape *ai_chat_area;
+    sfRectangleShape *ai_scrollbar;
+    sfRectangleShape *ai_scrollbar_thumb;
+    int ai_chat_scroll_offset;
+    char ai_input_buffer[512];
+    int ai_input_cursor;
+    int ai_input_scroll_offset;
+    int ai_is_typing;
+    int ai_input_display_lines;
 } ui_elements_t;
 
 typedef struct {
@@ -298,6 +358,10 @@ typedef struct {
     int dropdown_open;
     int options_dropdown_open;
     int dragging_layer_scrollbar;
+
+    // AI Chat
+    ai_chat_t *ai_chat;
+    sfClock *cursor_blink_clock;
 
     // Dimensions loaded from config
     int window_width;
@@ -388,5 +452,14 @@ sfVector2i get_scaled_mouse_pos(app_t *app);
 
 // Debug
 void render_debug_info(sfRenderWindow *window, paint_state_t *paint, sfFont *font, sfVector2i mouse_pos);
+
+// AI Chat functions
+ai_chat_t *init_ai_chat(void);
+void cleanup_ai_chat(ai_chat_t *chat);
+void add_ai_message(ai_chat_t *chat, message_type_t type, const char *content);
+void send_ai_request(app_t *app, const char *user_message);
+void parse_and_execute_ai_response(app_t *app, const char *response);
+void execute_drawing_command(app_t *app, const char *command, float progress);
+void process_ai_command_queue(app_t *app);
 
 #endif

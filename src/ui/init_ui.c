@@ -56,11 +56,11 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     int tab_text_offset_x = config_get_int(tabs_cfg, "text_offset_x", 10);
     int tab_text_offset_y = config_get_int(tabs_cfg, "text_offset_y", 8);
 
-    ui->tab_count = 3;
+    ui->tab_count = 4;
     ui->tab_buttons = malloc(sizeof(sfRectangleShape *) * ui->tab_count);
     ui->tab_labels = malloc(sizeof(sfText *) * ui->tab_count);
 
-    const char *tab_names[] = {"Pen", "Color", "Layer"};
+    const char *tab_names[] = {"Pen", "Color", "Layer", "IA"};
 
     for (int i = 0; i < ui->tab_count; i++) {
         ui->tab_buttons[i] = sfRectangleShape_create();
@@ -503,6 +503,54 @@ ui_elements_t *init_ui(sfFont *font, ui_config_t *config) {
     sfCircleShape_setOutlineColor(ui->color_wheel_cursor, sfWhite);
     sfCircleShape_setOutlineThickness(ui->color_wheel_cursor, 2);
     sfCircleShape_setOrigin(ui->color_wheel_cursor, (sfVector2f){5, 5});
+
+    // Initialize AI Chat UI
+    cJSON *ai_chat_cfg = toolbar_cfg ? cJSON_GetObjectItem(toolbar_cfg, "ai_chat") : NULL;
+    int ai_panel_x = toolbar_x + config_get_int(ai_chat_cfg, "panel_x", 15);
+    int ai_panel_y = config_get_int(ai_chat_cfg, "panel_y", 115);
+    int ai_panel_width = config_get_int(ai_chat_cfg, "panel_width", 270);
+    int ai_panel_height = config_get_int(ai_chat_cfg, "panel_height", 500);
+    int ai_input_height = config_get_int(ai_chat_cfg, "input_height", 40);
+    int ai_input_y = config_get_int(ai_chat_cfg, "input_y", 640);
+    sfColor ai_bg = config_get_color(ai_chat_cfg, "background_color", (sfColor){40, 40, 45, 255});
+    sfColor ai_input_bg = config_get_color(ai_chat_cfg, "input_bg_color", (sfColor){30, 30, 35, 255});
+
+    ui->ai_chat_bg = sfRectangleShape_create();
+    sfRectangleShape_setSize(ui->ai_chat_bg, (sfVector2f){ai_panel_width, ai_panel_height});
+    sfRectangleShape_setPosition(ui->ai_chat_bg, (sfVector2f){ai_panel_x, ai_panel_y});
+    sfRectangleShape_setFillColor(ui->ai_chat_bg, ai_bg);
+    sfRectangleShape_setOutlineColor(ui->ai_chat_bg, (sfColor){80, 80, 85, 255});
+    sfRectangleShape_setOutlineThickness(ui->ai_chat_bg, 1);
+
+    ui->ai_input_box = sfRectangleShape_create();
+    sfRectangleShape_setSize(ui->ai_input_box, (sfVector2f){ai_panel_width - 70, ai_input_height});
+    sfRectangleShape_setPosition(ui->ai_input_box, (sfVector2f){ai_panel_x, ai_input_y});
+    sfRectangleShape_setFillColor(ui->ai_input_box, ai_input_bg);
+    sfRectangleShape_setOutlineColor(ui->ai_input_box, (sfColor){80, 80, 85, 255});
+    sfRectangleShape_setOutlineThickness(ui->ai_input_box, 1);
+
+    ui->ai_input_text = sfText_create(font);
+    sfText_setCharacterSize(ui->ai_input_text, 14);
+    sfText_setFillColor(ui->ai_input_text, sfWhite);
+
+    ui->ai_send_button = sfRectangleShape_create();
+    sfRectangleShape_setSize(ui->ai_send_button, (sfVector2f){60, 35});
+    sfRectangleShape_setPosition(ui->ai_send_button, (sfVector2f){ai_panel_x + ai_panel_width - 65, ai_input_y + 2});
+    sfRectangleShape_setFillColor(ui->ai_send_button, config_get_color(ai_chat_cfg, "send_button_color", (sfColor){70, 120, 200, 255}));
+    sfRectangleShape_setOutlineColor(ui->ai_send_button, (sfColor){90, 140, 220, 255});
+    sfRectangleShape_setOutlineThickness(ui->ai_send_button, 1);
+
+    ui->ai_send_label = sfText_create(font);
+    sfText_setString(ui->ai_send_label, "Send");
+    sfText_setCharacterSize(ui->ai_send_label, 14);
+    sfText_setFillColor(ui->ai_send_label, sfWhite);
+    sfText_setPosition(ui->ai_send_label, (sfVector2f){ai_panel_x + ai_panel_width - 50, ai_input_y + 10});
+
+    ui->ai_chat_scroll_offset = 0;
+    ui->ai_input_buffer[0] = '\0';
+    ui->ai_input_cursor = 0;
+    ui->ai_input_scroll_offset = 0;
+    ui->ai_is_typing = 0;
 
     return ui;
 }

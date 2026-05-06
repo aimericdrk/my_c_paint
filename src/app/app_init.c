@@ -59,12 +59,15 @@ app_t *init_app(void) {
 
     app->paint = init_paint_state(app->canvas_width, app->canvas_height, app->canvas_x, app->canvas_y);
     app->ui = init_ui(app->font, app->config);
+    app->ai_chat = init_ai_chat();
+    app->cursor_blink_clock = sfClock_create();
     app->dragging_slider = -1;
     app->dropdown_open = 0;
     app->options_dropdown_open = 0;
     app->active_tab = TAB_PEN;
+    app->dragging_layer_scrollbar = 0;
 
-    if (!app->paint || !app->ui) {
+    if (!app->paint || !app->ui || !app->ai_chat || !app->cursor_blink_clock) {
         cleanup_app(app);
         return NULL;
     }

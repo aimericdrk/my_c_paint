@@ -111,8 +111,8 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
 
         if (is_point_in_rect(mouse_pos, btn_pos, btn_size)) {
             app->active_tab = (toolbar_tab_t)i;
-            const char *tab_names[] = {"Pen", "Color", "Layer"};
-            printf("🔧 Switched to %s tab\n", tab_names[i]);
+            const char *tab_names[] = {"Pen", "Color", "Layer", "IA"};
+            printf("Switched to %s tab\n", tab_names[i]);
             return;
         }
     }
@@ -354,6 +354,34 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
                     app->ui->layer_panel_scroll_offset = app->paint->layer_count - max_visible;
                 return;
             }
+        }
+    } else if (app->active_tab == TAB_IA) {
+        // Check AI Chat send button
+        sfVector2f send_pos = sfRectangleShape_getPosition(app->ui->ai_send_button);
+        sfVector2f send_size = sfRectangleShape_getSize(app->ui->ai_send_button);
+
+        if (is_point_in_rect(mouse_pos, send_pos, send_size)) {
+            if (strlen(app->ui->ai_input_buffer) > 0) {
+                // Add user message to chat
+                add_ai_message(app->ai_chat, MESSAGE_USER, app->ui->ai_input_buffer);
+
+                // Send request to AI
+                send_ai_request(app, app->ui->ai_input_buffer);
+
+                // Clear input
+                app->ui->ai_input_buffer[0] = '\0';
+                app->ui->ai_input_cursor = 0;
+            }
+            return;
+        }
+
+        // Check AI input box click (to enable typing)
+        sfVector2f input_pos = sfRectangleShape_getPosition(app->ui->ai_input_box);
+        sfVector2f input_size = sfRectangleShape_getSize(app->ui->ai_input_box);
+
+        if (is_point_in_rect(mouse_pos, input_pos, input_size)) {
+            app->ui->ai_is_typing = 1;
+            return;
         }
     }
 }

@@ -24,7 +24,7 @@ void move_layer_up(paint_state_t *paint, int layer_index) {
         paint->current_layer++;
     }
 
-    printf("⬆️ Moved layer up: %s\n", temp.name);
+    printf("Moved layer up: %s\n", temp.name);
     composite_layers(paint);
 }
 
@@ -45,6 +45,6 @@ void move_layer_down(paint_state_t *paint, int layer_index) {
         paint->current_layer--;
     }
 
-    printf("⬇️ Moved layer down: %s\n", temp.name);
+    printf("Moved layer down: %s\n", temp.name);
     composite_layers(paint);
 }

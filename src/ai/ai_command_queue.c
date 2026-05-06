@@ -44,7 +44,7 @@ void process_ai_command_queue(app_t *app) {
         cmd->progress = 1.0f;
         execute_drawing_command(app, cmd->command, cmd->progress);
 
-        printf("🎨 Completed command %d/%d: %s\n", app->ai_chat->current_command + 1, app->ai_chat->command_count, cmd->command);
+        printf("Completed command %d/%d: %s\n", app->ai_chat->current_command + 1, app->ai_chat->command_count, cmd->command);
 
         // Move to next command
         app->ai_chat->current_command++;

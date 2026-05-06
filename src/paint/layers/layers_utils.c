@@ -16,7 +16,7 @@ void merge_layer_down(paint_state_t *paint, int layer_index) {
     layer_t *upper = &paint->layers[layer_index];
     layer_t *lower = &paint->layers[layer_index - 1];
 
-    printf("🔗 Merging %s into %s\n", upper->name, lower->name);
+    printf("Merging %s into %s\n", upper->name, lower->name);
 
     // Draw upper layer onto lower layer with opacity
     sfColor blend_color = (sfColor){255, 255, 255, upper->opacity};
@@ -48,7 +48,7 @@ void toggle_layer_visibility(paint_state_t *paint, int layer_index) {
     }
 
     paint->layers[layer_index].visible = !paint->layers[layer_index].visible;
-    printf("👁️ Layer %s visibility: %s\n", paint->layers[layer_index].name, paint->layers[layer_index].visible ? "ON" : "OFF");
+    printf("Layer %s visibility: %s\n", paint->layers[layer_index].name, paint->layers[layer_index].visible ? "ON" : "OFF");
     composite_layers(paint);
 }
 

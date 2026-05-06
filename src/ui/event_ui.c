@@ -127,7 +127,7 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
             if (is_point_in_rect(mouse_pos, btn_pos, btn_size)) {
                 app->paint->current_tool = (tool_type_t)i;
                 const char *tool_names[] = {"Pen", "Eraser", "Brush", "Spray", "Line", "Rectangle", "Circle", "Fill"};
-                printf("🔧 Tool changed to: %s\n", tool_names[i]);
+                printf("Tool changed to: %s\n", tool_names[i]);
                 return;
             }
         }
@@ -232,7 +232,7 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
             app->paint->current_color.b = (uint8_t)((b + m) * 255);
             // Keep current alpha value
 
-            printf("🎨 Color picked from wheel: R=%d G=%d B=%d\n", app->paint->current_color.r, app->paint->current_color.g, app->paint->current_color.b);
+            printf("Color picked from wheel: R=%d G=%d B=%d\n", app->paint->current_color.r, app->paint->current_color.g, app->paint->current_color.b);
             return;
         }
     } else if (app->active_tab == TAB_LAYER) {
@@ -254,7 +254,7 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
             save_undo_state(app->paint);
             create_layer(app->paint, NULL);
             composite_layers(app->paint);
-            printf("➕ New layer created\n");
+            printf("New layer created\n");
             return;
         }
 
@@ -331,7 +331,7 @@ void handle_ui_click(app_t *app, sfVector2i mouse_pos) {
 
                 // Otherwise select the layer
                 app->paint->current_layer = layer_idx;
-                printf("🎨 Selected layer: %s\n", app->paint->layers[layer_idx].name);
+                printf("Selected layer: %s\n", app->paint->layers[layer_idx].name);
                 return;
             }
         }

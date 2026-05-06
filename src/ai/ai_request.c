@@ -121,7 +121,7 @@ void *ai_request_thread(void *arg) {
         return NULL;
     }
 
-    printf("📤 Sending request: %s\n", json_body);
+    printf("Sending request: %s\n", json_body);
 
     // Set up headers
     struct curl_slist *headers = NULL;
@@ -146,10 +146,10 @@ void *ai_request_thread(void *arg) {
         char error_msg[256];
         snprintf(error_msg, sizeof(error_msg), "Error: %s", curl_easy_strerror(res));
         add_ai_message(app->ai_chat, MESSAGE_AI, error_msg);
-        printf("❌ CURL Error: %s\n", curl_easy_strerror(res));
+        printf("ERROR, CURL Error: %s\n", curl_easy_strerror(res));
     } else {
         // Log raw response for debugging
-        printf("\n📡 Raw API Response:\n%s\n\n", chunk.data);
+        printf("\nRaw API Response:\n%s\n\n", chunk.data);
 
         // Parse response
         pthread_mutex_unlock(&app->ai_chat->mutex);
@@ -218,5 +218,5 @@ void send_ai_request(app_t *app, const char *user_message) {
     pthread_detach(app->ai_chat->request_thread);
     pthread_mutex_unlock(&app->ai_chat->mutex);
 
-    printf("🚀 AI request started in background thread\n");
+    printf("AI request started in background thread\n");
 }

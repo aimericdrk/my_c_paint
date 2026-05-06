@@ -34,7 +34,7 @@ static void load_env_file(const char *filename, ai_chat_t *chat) {
             if (strcmp(key, "MISTRAL_API_KEY") == 0) {
                 strncpy(chat->api_key, value, sizeof(chat->api_key) - 1);
                 chat->api_key[sizeof(chat->api_key) - 1] = '\0';
-                printf("✓ Loaded MISTRAL_API_KEY from .env\n");
+                printf("Loaded MISTRAL_API_KEY from .env\n");
             }
         }
     }
@@ -77,7 +77,7 @@ ai_chat_t *init_ai_chat(void) {
         if (api_key) {
             strncpy(chat->api_key, api_key, sizeof(chat->api_key) - 1);
             chat->api_key[sizeof(chat->api_key) - 1] = '\0';
-            printf("✓ Loaded MISTRAL_API_KEY from environment\n");
+            printf("Loaded MISTRAL_API_KEY from environment\n");
         } else {
             printf("Warning: MISTRAL_API_KEY not found in .env or environment\n");
         }

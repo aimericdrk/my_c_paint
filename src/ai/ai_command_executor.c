@@ -15,7 +15,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
     sscanf(command, "%s", cmd_type);
 
     if (progress >= 1.0f) {
-        printf("🖌️  Executing: %s (layer %d/%d) [FINAL]\n", cmd_type, app->paint->current_layer, app->paint->layer_count);
+        printf("Executing: %s (layer %d/%d) [FINAL]\n", cmd_type, app->paint->current_layer, app->paint->layer_count);
     }
 
     if (strcmp(cmd_type, "DRAW_LINE") == 0) {
@@ -35,7 +35,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 sfRenderTexture_display(app->paint->layers[app->paint->current_layer].texture);
                 composite_layers(app->paint);
                 if (progress >= 1.0f) {
-                    printf("   ✓ Line drawn from (%d,%d) to (%d,%d)\n", x1, y1, x2, y2);
+                    printf("Line drawn from (%d,%d) to (%d,%d)\n", x1, y1, x2, y2);
                 }
             }
         }
@@ -61,7 +61,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 sfRenderTexture_display(app->paint->layers[app->paint->current_layer].texture);
                 composite_layers(app->paint);
                 if (progress >= 1.0f) {
-                    printf("   ✓ Circle drawn at (%d,%d) radius %d\n", x, y, radius);
+                    printf("Circle drawn at (%d,%d) radius %d\n", x, y, radius);
                 }
             }
         }
@@ -88,7 +88,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 sfRenderTexture_display(target);
                 composite_layers(app->paint);
                 if (progress >= 1.0f) {
-                    printf("   ✓ Filled circle drawn at (%d,%d) radius %d\n", x, y, radius);
+                    printf("Filled circle drawn at (%d,%d) radius %d\n", x, y, radius);
                 }
             }
         }
@@ -107,7 +107,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 draw_line(target, (sfVector2i){x, y + height}, (sfVector2i){x, y}, color, app->paint->brush_size);
                 sfRenderTexture_display(target);
                 composite_layers(app->paint);
-                printf("   ✓ Rectangle drawn at (%d,%d) size %dx%d\n", x, y, width, height);
+                printf("Rectangle drawn at (%d,%d) size %dx%d\n", x, y, width, height);
             }
         }
     } else if (strcmp(cmd_type, "DRAW_FILLED_RECT") == 0 || strcmp(cmd_type, "FILL_RECT") == 0) {
@@ -138,7 +138,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 sfRenderTexture_display(target);
                 composite_layers(app->paint);
                 if (progress >= 1.0f) {
-                    printf("   ✓ Filled rectangle drawn at (%d,%d) size %dx%d\n", x, y, width, height);
+                    printf("Filled rectangle drawn at (%d,%d) size %dx%d\n", x, y, width, height);
                 }
             }
         }
@@ -153,7 +153,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 draw_circle_point(app->paint->layers[app->paint->current_layer].texture, (sfVector2i){x, y}, color, size);
                 sfRenderTexture_display(app->paint->layers[app->paint->current_layer].texture);
                 composite_layers(app->paint);
-                printf("   ✓ Point drawn at (%d,%d)\n", x, y);
+                printf("Point drawn at (%d,%d)\n", x, y);
             }
         }
     } else if (strcmp(cmd_type, "DRAW_TRIANGLE") == 0) {
@@ -162,14 +162,14 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
             app->ai_chat->draw_cursor_pos = (sfVector2i){x1 + app->canvas_x, y1 + app->canvas_y};
             sfColor color = {r, g, b, 255};
             if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
-                printf("   Drawing triangle (%d,%d) (%d,%d) (%d,%d)\n", x1, y1, x2, y2, x3, y3);
+                printf("Drawing triangle (%d,%d) (%d,%d) (%d,%d)\n", x1, y1, x2, y2, x3, y3);
                 sfRenderTexture *target = app->paint->layers[app->paint->current_layer].texture;
                 draw_line(target, (sfVector2i){x1, y1}, (sfVector2i){x2, y2}, color, app->paint->brush_size);
                 draw_line(target, (sfVector2i){x2, y2}, (sfVector2i){x3, y3}, color, app->paint->brush_size);
                 draw_line(target, (sfVector2i){x3, y3}, (sfVector2i){x1, y1}, color, app->paint->brush_size);
                 sfRenderTexture_display(target);
                 composite_layers(app->paint);
-                printf("   ✓ Triangle drawn and composited\n");
+                printf("Triangle drawn and composited\n");
             }
         }
     } else if (strcmp(cmd_type, "DRAW_FILLED_TRIANGLE") == 0) {
@@ -178,7 +178,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
             app->ai_chat->draw_cursor_pos = (sfVector2i){x1 + app->canvas_x, y1 + app->canvas_y};
             sfColor color = {r, g, b, 255};
             if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
-                printf("   Drawing filled triangle (%d,%d) (%d,%d) (%d,%d) RGB(%d,%d,%d)\n", x1, y1, x2, y2, x3, y3, r, g, b);
+                printf("Drawing filled triangle (%d,%d) (%d,%d) (%d,%d) RGB(%d,%d,%d)\n", x1, y1, x2, y2, x3, y3, r, g, b);
                 sfRenderTexture *target = app->paint->layers[app->paint->current_layer].texture;
 
                 // Sort vertices by y coordinate
@@ -248,7 +248,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
 
                 sfRenderTexture_display(target);
                 composite_layers(app->paint);
-                printf("   ✓ Filled triangle drawn and composited\n");
+                printf("Filled triangle drawn and composited\n");
             }
         }
     } else if (strcmp(cmd_type, "DRAW_ELLIPSE") == 0) {
@@ -257,7 +257,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
             app->ai_chat->draw_cursor_pos = (sfVector2i){cx + app->canvas_x, cy + app->canvas_y};
             sfColor color = {r, g, b, 255};
             if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
-                printf("   Drawing ellipse at (%d,%d) radii %dx%d\n", cx, cy, rx, ry);
+                printf("Drawing ellipse at (%d,%d) radii %dx%d\n", cx, cy, rx, ry);
                 sfRenderTexture *target = app->paint->layers[app->paint->current_layer].texture;
                 for (float angle = 0; angle < 2 * M_PI; angle += 0.01f) {
                     int x = cx + rx * cos(angle);
@@ -266,7 +266,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 }
                 sfRenderTexture_display(target);
                 composite_layers(app->paint);
-                printf("   ✓ Ellipse drawn and composited\n");
+                printf("Ellipse drawn and composited\n");
             }
         }
     } else if (strcmp(cmd_type, "DRAW_CURVE") == 0) {
@@ -275,7 +275,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
             app->ai_chat->draw_cursor_pos = (sfVector2i){x1 + app->canvas_x, y1 + app->canvas_y};
             sfColor color = {r, g, b, 255};
             if (app->paint->current_layer >= 0 && app->paint->current_layer < app->paint->layer_count) {
-                printf("   Drawing bezier curve from (%d,%d) to (%d,%d)\n", x1, y1, x4, y4);
+                printf("Drawing bezier curve from (%d,%d) to (%d,%d)\n", x1, y1, x4, y4);
                 sfRenderTexture *target = app->paint->layers[app->paint->current_layer].texture;
                 // Draw bezier curve using parametric form
                 int prev_x = x1, prev_y = y1;
@@ -293,7 +293,7 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
                 }
                 sfRenderTexture_display(target);
                 composite_layers(app->paint);
-                printf("   ✓ Curve drawn and composited\n");
+                printf("Curve drawn and composited\n");
             }
         }
     } else if (strcmp(cmd_type, "SET_BRUSH_SIZE") == 0) {
@@ -301,15 +301,15 @@ void execute_drawing_command(app_t *app, const char *command, float progress) {
         if (sscanf(command, "SET_BRUSH_SIZE %d", &size) == 1) {
             if (size >= 1 && size <= 50) {
                 app->paint->brush_size = size;
-                printf("   Brush size set to %d\n", size);
+                printf("Brush size set to %d\n", size);
             }
         }
     } else if (strcmp(cmd_type, "CLEAR_CANVAS") == 0) {
-        printf("   Clearing canvas\n");
+        printf("Clearing canvas\n");
         save_undo_state(app->paint);
         clear_canvas(app->paint);
-        printf("   ✓ Canvas cleared\n");
+        printf("Canvas cleared\n");
     } else {
-        printf("   ⚠️  Unknown command: %s\n", cmd_type);
+        printf("ERROR, Unknown command: %s\n", cmd_type);
     }
 }

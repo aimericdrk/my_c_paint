@@ -51,7 +51,7 @@ int create_layer(paint_state_t *paint, const char *name) {
 
     paint->layer_count++;
 
-    printf("✨ Created layer: %s (index %d)\n", layer->name, index);
+    printf("Created layer: %s (index %d)\n", layer->name, index);
 
     return index;
 }
@@ -68,7 +68,7 @@ void delete_layer(paint_state_t *paint, int layer_index) {
         return;
     }
 
-    printf("🗑️ Deleting layer: %s\n", paint->layers[layer_index].name);
+    printf("Deleting layer: %s\n", paint->layers[layer_index].name);
 
     // Cleanup layer resources
     if (paint->layers[layer_index].texture) {

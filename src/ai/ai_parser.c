@@ -103,7 +103,7 @@ void parse_and_execute_ai_response(app_t *app, const char *response) {
         trimmed++;
     }
 
-    printf("📋 Extracted JSON: %s\n", trimmed);
+    printf("Extracted JSON: %s\n", trimmed);
 
     // Remove JavaScript-style comments from JSON
     char cleaned_json[MAX_AI_MESSAGE_LENGTH];
@@ -132,7 +132,7 @@ void parse_and_execute_ai_response(app_t *app, const char *response) {
     }
     cleaned_json[dst] = '\0';
 
-    printf("🧹 Cleaned JSON (first 500 chars): %.500s\n", cleaned_json);
+    printf("Cleaned JSON (first 500 chars): %.500s\n", cleaned_json);
 
     // Try to parse drawing commands from the AI's response
     cJSON *commands_json = cJSON_Parse(cleaned_json);
@@ -170,7 +170,7 @@ void parse_and_execute_ai_response(app_t *app, const char *response) {
                     strncpy(app->ai_chat->command_queue[i].command, cmd->valuestring, 255);
                     app->ai_chat->command_queue[i].command[255] = '\0';
                     app->ai_chat->command_count++;
-                    printf("   Command %d: %s\n", i + 1, cmd->valuestring);
+                    printf("Command %d: %s\n", i + 1, cmd->valuestring);
                 }
             }
 
@@ -180,7 +180,7 @@ void parse_and_execute_ai_response(app_t *app, const char *response) {
         cJSON_Delete(commands_json);
     } else {
         // No structured commands, just add the message as-is
-        printf("ℹ️  AI message is plain text (no JSON commands)\n");
+        printf("AI message is plain text (no JSON commands)\n");
         add_ai_message(app->ai_chat, MESSAGE_AI, ai_message);
     }
 
